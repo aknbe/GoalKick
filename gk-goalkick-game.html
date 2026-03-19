@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>GKトレーニング 8人制</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Orbitron:wght@700;900&display=swap');
+:root{--cyan:#00e5c8;--gold:#f7d44c;--red:#ff4545;--blue:#4da6ff;--bg:#0b1c12;--panel:rgba(8,24,14,0.95);--text:#d8f0e2;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);font-family:'Zen Kaku Gothic New',sans-serif;color:var(--text);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;}
+header{width:100%;max-width:520px;display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px 6px;background:rgba(0,0,0,.55);border-bottom:2px solid var(--cyan);}
+.h-title{font-family:'Orbitron',sans-serif;font-size:.86rem;letter-spacing:2px;
+  color:var(--cyan);text-shadow:0 0 12px rgba(0,229,200,.5);}
+.h-right{display:flex;gap:10px;align-items:center;}
+.score-tag{font-family:'Orbitron',sans-serif;font-size:.9rem;color:var(--gold);}
+.stage-chip{background:var(--cyan);color:#000;font-weight:900;font-size:.66rem;
+  padding:2px 8px;border-radius:20px;font-family:'Orbitron',sans-serif;}
+main{width:100%;max-width:520px;padding:6px 7px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;}
+#field-wrap{position:relative;width:100%;border-radius:10px;overflow:hidden;
+  border:2px solid rgba(0,229,200,.2);
+  box-shadow:0 0 36px rgba(0,229,200,.08),0 6px 28px rgba(0,0,0,.7);
+  cursor:crosshair;touch-action:none;}
+canvas{display:block;width:100%;}
+#phase-banner{width:100%;padding:7px 13px;border-radius:8px;background:var(--panel);
+  border:1px solid rgba(0,229,200,.22);font-size:.82rem;line-height:1.6;text-align:center;
+  min-height:42px;display:flex;align-items:center;justify-content:center;}
+#phase-banner .hl{color:var(--cyan);font-weight:700;}
+#phase-banner .w{color:var(--gold);font-weight:700;}
+#kick-row{display:flex;gap:5px;width:100%;}
+.kt{flex:1;padding:7px 0;border:none;border-radius:7px;
+  font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.76rem;cursor:pointer;transition:all .14s;}
+.kt-kick{background:rgba(77,166,255,.18);color:var(--blue);border:1.5px solid var(--blue);}
+.kt-kick.on{background:var(--blue);color:#fff;}
+.kt-throw{background:rgba(247,212,76,.15);color:var(--gold);border:1.5px solid var(--gold);}
+.kt-throw.on{background:var(--gold);color:#000;}
+.kt-long{background:rgba(255,69,69,.15);color:var(--red);border:1.5px solid var(--red);}
+.kt-long.on{background:var(--red);color:#fff;}
+#power-row{width:100%;display:flex;align-items:center;gap:7px;font-size:.74rem;color:#88bbaa;}
+#pw-bg{flex:1;height:9px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;cursor:pointer;}
+#pw-fill{height:100%;width:70%;border-radius:5px;background:linear-gradient(90deg,var(--cyan),var(--gold));transition:width .05s;}
+#btn-row{display:flex;gap:7px;width:100%;}
+.btn{flex:1;padding:8px 0;border:none;border-radius:7px;
+  font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;}
+.btn-main{background:var(--cyan);color:#000;}
+.btn-sub{background:rgba(255,255,255,.07);color:var(--text);border:1px solid rgba(255,255,255,.12);}
+#legend{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;font-size:.70rem;color:#7aaa8d;}
+.leg{display:flex;align-items:center;gap:4px;}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;align-items:center;justify-content:center;}
+#overlay.show{display:flex;}
+.ov-box{background:var(--panel);border:2px solid var(--cyan);border-radius:15px;
+  padding:22px 30px;text-align:center;box-shadow:0 0 50px rgba(0,229,200,.2);max-width:290px;width:90%;}
+.ov-icon{font-size:2.2rem;margin-bottom:4px;}
+.ov-title{font-family:'Orbitron',sans-serif;font-size:1.05rem;margin-bottom:3px;}
+.ov-pts{font-family:'Orbitron',sans-serif;font-size:1.25rem;color:var(--gold);margin-bottom:6px;}
+.ov-msg{font-size:.81rem;color:#99ccaa;line-height:1.55;margin-bottom:13px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-title">GK TRAINING 8v8</div>
+  <div class="h-right">
+    <span class="stage-chip" id="stage-chip">STAGE 1</span>
+    <span class="score-tag"  id="score-disp">🏆 0</span>
+  </div>
+</header>
+<main>
+  <div id="field-wrap"><canvas id="c"></canvas></div>
+  <div id="phase-banner">読み込み中…</div>
+  <div id="kick-row">
+    <button class="kt kt-kick on" onclick="setKT('kick')"  id="btn-kt-kick">⚽ ゴールキック</button>
+    <button class="kt kt-throw"  onclick="setKT('throw')" id="btn-kt-throw">🤲 手投げ</button>
+    <button class="kt kt-long"   onclick="setKT('long')"  id="btn-kt-long">🦵 ロング</button>
+  </div>
+  <div id="power-row">
+    <span>パワー</span>
+    <div id="pw-bg"><div id="pw-fill"></div></div>
+    <span id="pw-label">70%</span>
+  </div>
+  <div id="btn-row">
+    <button class="btn btn-sub" onclick="resetRound()">🔄 やり直す</button>
+    <button class="btn btn-sub" onclick="showHelp()">❓ ルール</button>
+  </div>
+  <div id="legend">
+    <span class="leg"><span class="dot" style="background:var(--cyan)"></span>GK</span>
+    <span class="leg"><span class="dot" style="background:var(--blue)"></span>味方(7)</span>
+    <span class="leg"><span class="dot" style="background:var(--red)"></span>相手(7)</span>
+    <span class="leg"><span class="dot" style="background:var(--gold)"></span>ボール</span>
+  </div>
+</main>
+<div id="overlay">
+  <div class="ov-box">
+    <div class="ov-icon"  id="ov-icon">⚽</div>
+    <div class="ov-title" id="ov-title">-</div>
+    <div class="ov-pts"   id="ov-pts"></div>
+    <div class="ov-msg"   id="ov-msg"></div>
+    <button class="btn btn-main" onclick="nextRound()" style="width:100%">次のラウンド →</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  FIELD: 縦68m × 横50m  (portrait)
+//  座標系: メートル単位、y=0=自陣ゴールライン(画面下), y=68=相手ゴールライン(画面上)
+//  ハーフラインは y=34m (正確に中央)
+// ═══════════════════════════════════════════════════════
+const SC   = 6.5;              // px per meter
+const FM_W = 50;               // field width  in meters
+const FM_H = 68;               // field height in meters
+const PAD  = 16;               // canvas padding
+
+const FPX_W = FM_W * SC;
+const FPX_H = FM_H * SC;
+const CW    = FPX_W + PAD * 2;
+const CH    = FPX_H + PAD * 2;
+
+const CV  = document.getElementById('c');
+const ctx = CV.getContext('2d');
+CV.width  = CW;
+CV.height = CH;
+
+// Meter → canvas pixel converters
+// x: 0=left, 50=right
+// y: 0=OWN goal (BOTTOM), 68=OPP goal (TOP)  → flip for canvas
+const cx = mx => PAD + mx * SC;
+const cy = my => PAD + (FM_H - my) * SC;
+
+// ── Field metric landmarks (meters from own goal line) ──
+const HALF_M    = 34;    // halfway line (exact center of 68m)
+const OWN_PA_M  = 12;    // own penalty area top
+const OWN_GA_M  = 4;     // own goal area top
+const OPP_PA_M  = 56;    // opp penalty area bottom (68-12)
+const OPP_GA_M  = 64;    // opp goal area bottom    (68-4)
+
+// Canvas pixel Y for key horizontal lines (computed once)
+const HALF_PY    = cy(HALF_M);     // <-- single source of truth for halfway
+const OWN_GL_PY  = cy(0);
+const OWN_PA_PY  = cy(OWN_PA_M);
+const OWN_GA_PY  = cy(OWN_GA_M);
+const OPP_GL_PY  = cy(FM_H);
+const OPP_PA_PY  = cy(OPP_PA_M);
+const OPP_GA_PY  = cy(OPP_GA_M);
+
+// X landmarks (meters from left touchline)
+const GL_L  = (FM_W - 5) / 2;    // goal post left  = 22.5
+const GL_R  = (FM_W + 5) / 2;    // goal post right = 27.5
+const PA_L  = (FM_W - 27) / 2;   // penalty area left  = 11.5
+const PA_R  = (FM_W + 27) / 2;   // penalty area right = 38.5
+const GA_L  = (FM_W - 13) / 2;   // goal area left  = 18.5
+const GA_R  = (FM_W + 13) / 2;   // goal area right = 31.5
+const CX_M  = FM_W / 2;          // center x = 25
+
+const CC_R  = 7;  // center circle radius (meters)
+const GK_HOME = { x: cx(CX_M), y: cy(OWN_GA_M + 1.5) };
+
+// ═══════════════════════════════════════════════════════
+//  KICK CONFIG
+// ═══════════════════════════════════════════════════════
+const KT = {
+  kick:  { spd: 4.0, col: '#4da6ff', label: 'ゴールキック' },
+  throw: { spd: 4.8, col: '#f7d44c', label: '手投げ' },
+  long:  { spd: 7.0, col: '#ff4545', label: 'ロングキック' },
+};
+
+// ═══════════════════════════════════════════════════════
+//  RANDOM PLACEMENT HELPERS
+// ═══════════════════════════════════════════════════════
+function rnd(a, b) { return a + Math.random() * (b - a); }
+
+// Ensure minimum separation between generated points
+function placedFar(pts, nx, ny, minD) {
+  return pts.every(p => Math.hypot(p.x - nx, p.y - ny) >= minD);
+}
+
+function genTeammates() {
+  const nums = [2, 3, 4, 5, 7, 9, 11];
+  const pts  = [];
+  const minD = 3.5; // meters minimum spacing
+
+  // [0] always in own penalty area
+  pts.push({ mx: rnd(PA_L + 1.5, PA_R - 1.5), my: rnd(1, OWN_PA_M - 1) });
+
+  // [1-3] scattered in own half (y: PA_M .. HALF_M-2)
+  for (let i = 1; i <= 3; i++) {
+    let mx, my, tries = 0;
+    do { mx = rnd(2, FM_W - 2); my = rnd(OWN_PA_M + 1, HALF_M - 2); tries++; }
+    while (!placedFar(pts, mx, my, minD) && tries < 30);
+    pts.push({ mx, my });
+  }
+
+  // [4-6] in opponent half (y: HALF_M+1 .. OPP_PA_M-2)
+  for (let i = 4; i <= 6; i++) {
+    let mx, my, tries = 0;
+    do { mx = rnd(2, FM_W - 2); my = rnd(HALF_M + 1, OPP_PA_M - 2); tries++; }
+    while (!placedFar(pts, mx, my, minD) && tries < 30);
+    pts.push({ mx, my });
+  }
+
+  return pts.map((p, i) => ({ ...p, num: nums[i] }));
+}
+
+function genOpponents(stageIdx) {
+  const baseSPD = 0.18 + stageIdx * 0.055;
+  const pts = [];
+  const minD = 3.5;
+
+  // [0-1] in opponent half (y: HALF_M+3 .. OPP_PA_M-2)
+  for (let i = 0; i < 2; i++) {
+    let mx, my, tries = 0;
+    do { mx = rnd(2, FM_W-2); my = rnd(HALF_M + 3, OPP_PA_M - 2); tries++; }
+    while (!placedFar(pts, mx, my, minD) && tries < 30);
+    pts.push({ mx, my, spd: baseSPD * rnd(0.9, 1.1) });
+  }
+
+  // [2-6] in own half (y: OWN_PA_M+2 .. HALF_M+2)  — cannot enter own PA
+  for (let i = 2; i < 7; i++) {
+    let mx, my, tries = 0;
+    do { mx = rnd(2, FM_W-2); my = rnd(OWN_PA_M + 2, HALF_M + 2); tries++; }
+    while (!placedFar(pts, mx, my, minD) && tries < 30);
+    pts.push({ mx, my, spd: baseSPD * rnd(0.9, 1.2) });
+  }
+
+  return pts;
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+const N_STAGES    = 4;
+const TIMER_MAX   = [360, 300, 250, 210];
+const PRESS_DELAY = [3800, 2600, 1700, 1100]; // ms before opponents press
+
+let G = {
+  stage: 1, score: 0, successCount: 0,
+  phase: 'place',   // place | aim | flying | loose | dribble | result
+  kickType: 'kick', power: 0.70,
+  ball: null, ballHolder: null, gk: null,
+  teammates: [], opponents: [],
+  aimPt: null,
+  timerF: 0, timerRunning: false, pressDelayPassed: false,
+  rafId: null, particles: [], dribbleTimer: 0, ended: false,
+};
+
+// ═══════════════════════════════════════════════════════
+//  INIT ROUND
+// ═══════════════════════════════════════════════════════
+function initRound() {
+  cancelAnimationFrame(G.rafId);
+  const si = (G.stage - 1) % N_STAGES;
+
+  Object.assign(G, {
+    phase: 'place', timerF: 0, timerRunning: false, pressDelayPassed: false,
+    aimPt: null, particles: [], ballHolder: null, dribbleTimer: 0, ended: false,
+    ball: { x: cx(CX_M), y: cy(OWN_GA_M + 1), vx: 0, vy: 0, trail: [] },
+    gk:   { ...GK_HOME },
+  });
+
+  const tmDefs = genTeammates();
+  G.teammates  = tmDefs.map(t => ({
+    mx: t.mx, my: t.my,
+    x:  cx(t.mx), y: cy(t.my),
+    ox: cx(t.mx), oy: cy(t.my),
+    num: t.num, hasBall: false,
+    wAngle: Math.random() * Math.PI * 2,
+    wTimer: Math.floor(Math.random() * 70),
+    anim:   Math.random() * Math.PI * 2,
+  }));
+
+  const opDefs = genOpponents(si);
+  G.opponents  = opDefs.map(o => ({
+    mx: o.mx, my: o.my,
+    x:  cx(o.mx), y: cy(o.my),
+    ox: cx(o.mx), oy: cy(o.my),
+    spd: o.spd,
+    pAngle: Math.random() * Math.PI * 2,
+    pTimer: Math.floor(Math.random() * 80),
+    anim:   Math.random() * Math.PI * 2,
+  }));
+
+  document.getElementById('stage-chip').textContent = 'STAGE ' + G.stage;
+  updateScore();
+  setBanner('<span class="hl">①ゴールエリア内</span>をタップして<span class="w">ボールを置く</span>場所を選ぼう！');
+  loop();
+}
+
+// ═══════════════════════════════════════════════════════
+//  MAIN LOOP
+// ═══════════════════════════════════════════════════════
+function loop() { update(); draw(); G.rafId = requestAnimationFrame(loop); }
+
+// ═══════════════════════════════════════════════════════
+//  UPDATE
+// ═══════════════════════════════════════════════════════
+function update() {
+  if (G.ended) return;
+  const si = (G.stage - 1) % N_STAGES;
+
+  if (G.timerRunning) {
+    G.timerF++;
+    if (G.timerF * (1000/60) >= PRESS_DELAY[si]) G.pressDelayPassed = true;
+    if (G.timerF >= TIMER_MAX[si] &&
+        (G.phase==='flying'||G.phase==='aim'||G.phase==='loose')) {
+      doEnd(false, 'タイムアップ！もっと素早く判断しよう。'); return;
+    }
+  }
+
+  if (G.phase === 'flying' || G.phase === 'loose') moveBall();
+  if (G.phase === 'dribble') updateDribble();
+  updateTeammates();
+  updateOpponents();
+  advParticles();
+}
+
+// ── Ball physics ────────────────────────────────────────
+function moveBall() {
+  const b = G.ball;
+  b.trail.push({ x: b.x, y: b.y });
+  if (b.trail.length > 22) b.trail.shift();
+  b.x += b.vx; b.y += b.vy;
+  b.vx *= 0.991; b.vy *= 0.991;
+  spawnTrail();
+  if (G.phase === 'flying' && Math.hypot(b.vx, b.vy) < 0.6) G.phase = 'loose';
+  checkBall();
+}
+
+function checkBall() {
+  if (G.ended) return;
+  const { x: bx, y: by } = G.ball;
+  const spd = Math.hypot(G.ball.vx, G.ball.vy);
+
+  // Out of bounds (generous margin)
+  if (bx < PAD - 22 || bx > PAD + FPX_W + 22 ||
+      by < PAD - 22 || by > PAD + FPX_H + 22) {
+    doEnd(false, 'ボールがラインを割りました！'); return;
+  }
+
+  // Opponent intercepts
+  for (const op of G.opponents) {
+    if (Math.hypot(bx - op.x, by - op.y) < 13) {
+      burst(bx, by, '#ff4545');
+      doEnd(false, '相手にカットされた！DFを避けて配球しよう。'); return;
+    }
+  }
+
+  // Teammate catches
+  for (let i = 0; i < G.teammates.length; i++) {
+    const tm = G.teammates[i];
+    if (Math.hypot(bx - tm.x, by - tm.y) < 26) {
+      burst(bx, by, '#00e5c8');
+      G.ballHolder = i; tm.hasBall = true;
+      G.ball.trail = [];
+      G.phase = 'dribble'; G.dribbleTimer = 0;
+      setBanner('<span class="hl">#' + tm.num + 'がキャッチ！</span>ハーフライン突破へ！');
+      return;
+    }
+  }
+
+  // Ball stopped
+  if (spd < 0.24) {
+    // Use HALF_PY (same variable used for drawing)
+    if (by < HALF_PY) {
+      G.score += 20;
+      doEnd(true, 'ハーフを越えたが誰も受けられなかった。+20pts', 20, false);
+    } else if (by < OWN_PA_PY - 10) {
+      G.score += 8;
+      doEnd(true, 'ボールは前進！+8pts', 8, false);
+    } else {
+      doEnd(false, 'ボールが止まった。パワーを上げよう！');
+    }
+  }
+}
+
+// ── Teammate AI ─────────────────────────────────────────
+function updateTeammates() {
+  G.teammates.forEach((tm, i) => {
+    if (i === G.ballHolder) return;
+
+    // === Phase: ball is in the air or loose → chase if close ===
+    if (G.phase === 'flying' || G.phase === 'loose') {
+      const bd = Math.hypot(tm.x - G.ball.x, tm.y - G.ball.y);
+      if (bd < 120) {
+        const dx = G.ball.x - tm.x, dy = G.ball.y - tm.y;
+        const d  = Math.sqrt(dx*dx + dy*dy) || 1;
+        const spd = 0.28; // slow chase speed
+        tm.x += (dx/d) * spd;
+        tm.y += (dy/d) * spd;
+        constrainTM(tm, i);
+        return;
+      }
+    }
+
+    // === Flee from nearby opponents ===
+    let flee_x = 0, flee_y = 0;
+    const FLEE_R  = 80;  // px radius to start fleeing
+    const FLEE_STR = 1.0;
+    G.opponents.forEach(op => {
+      const dx = tm.x - op.x, dy = tm.y - op.y;
+      const d  = Math.sqrt(dx*dx + dy*dy) || 1;
+      if (d < FLEE_R) {
+        const s = ((FLEE_R - d) / FLEE_R) * FLEE_STR;
+        flee_x += (dx / d) * s;
+        flee_y += (dy / d) * s;
+      }
+    });
+
+    // === Support dribble: drift toward open forward position ===
+    let sup_x = 0, sup_y = 0;
+    if (G.phase === 'dribble') {
+      const tgX = tm.ox + Math.sin(G.dribbleTimer * 0.012 + tm.anim) * 16;
+      const tgY = Math.max(PAD + 8, tm.oy - Math.min(G.dribbleTimer * 0.05, 40));
+      sup_x = (tgX - tm.x) * 0.010;
+      sup_y = (tgY - tm.y) * 0.008;
+    }
+
+    // === Base wander ===
+    tm.wTimer++;
+    if (tm.wTimer > 85 + Math.random()*50) {
+      tm.wTimer = 0;
+      tm.wAngle += (Math.random() - 0.5) * 1.2;
+    }
+    const WANDER_SPD = 0.13;
+    let mvx = Math.cos(tm.wAngle) * WANDER_SPD + flee_x + sup_x;
+    let mvy = Math.sin(tm.wAngle) * WANDER_SPD + flee_y + sup_y;
+
+    // Soft spring back toward home (weaker when fleeing hard)
+    const fleeMag   = Math.hypot(flee_x, flee_y);
+    const springF   = fleeMag > 0.3 ? 0.004 : 0.007;
+    mvx += (tm.ox - tm.x) * springF;
+    mvy += (tm.oy - tm.y) * springF;
+
+    // Cap max speed (slow movement)
+    const mag = Math.hypot(mvx, mvy) || 1;
+    const MAX_SPD = 0.40;
+    if (mag > MAX_SPD) { mvx = mvx/mag*MAX_SPD; mvy = mvy/mag*MAX_SPD; }
+
+    tm.x += mvx;
+    tm.y += mvy;
+    constrainTM(tm, i);
+  });
+}
+
+function constrainTM(tm, i) {
+  tm.x = clamp(tm.x, PAD + 5, PAD + FPX_W - 5);
+  tm.y = clamp(tm.y, PAD + 5, PAD + FPX_H - 5);
+  // tm[0] is always confined to own penalty area
+  if (i === 0) {
+    tm.x = clamp(tm.x, cx(PA_L) + 4, cx(PA_R) - 4);
+    tm.y = clamp(tm.y, OWN_PA_PY + 4, OWN_GL_PY - 6);
+  }
+}
+
+// ── Opponent AI ─────────────────────────────────────────
+// Opponents chase the "freest" teammate (least covered)
+// "freest" = largest distance to nearest other opponent
+function findFreestTM() {
+  let best = null, bestScore = -Infinity;
+  G.teammates.forEach((tm, i) => {
+    if (i === G.ballHolder) return; // don't double-target holder
+    let minOppD = Infinity;
+    G.opponents.forEach(op => {
+      minOppD = Math.min(minOppD, Math.hypot(tm.x - op.x, tm.y - op.y));
+    });
+    // Prefer teammates closer to opponent half (higher threat)
+    const threat = minOppD + (HALF_PY - tm.y) * 0.5; // higher when far from opponents and near opp half
+    if (threat > bestScore) { bestScore = threat; best = tm; }
+  });
+  return best;
+}
+
+function updateOpponents() {
+  const now = Date.now() * 0.001;
+
+  // Each opponent picks its own target (spread across teammates)
+  G.opponents.forEach((op, i) => {
+    let tx, ty;
+
+    if (!G.pressDelayPassed &&
+        G.phase !== 'flying' && G.phase !== 'loose' && G.phase !== 'dribble') {
+      // === Pre-press: slow patrol around home position ===
+      op.pTimer++;
+      if (op.pTimer > 100 + i*8) { op.pTimer = 0; op.pAngle += (Math.random()-0.5)*1.0; }
+      tx = op.ox + Math.sin(now * 0.20 + op.anim) * 25;
+      ty = op.oy + Math.cos(now * 0.16 + op.anim) * 9;
+      const SPD_PATROL = 0.07;
+      op.x += (tx - op.x) * SPD_PATROL;
+      op.y += (ty - op.y) * SPD_PATROL;
+    } else {
+      // === Active: each opponent targets the freest uncovered teammate ===
+      // Use offset index so they spread
+      // Sort teammates by their "coverage gap" from THIS opponent's perspective
+      let bestTM = null, bestScore = -Infinity;
+      G.teammates.forEach((tm, ti) => {
+        // Distance from this opponent to this teammate
+        const dToMe = Math.hypot(tm.x - op.x, tm.y - op.y);
+        // Other opponents' coverage of this teammate
+        let minOtherCoverage = Infinity;
+        G.opponents.forEach((op2, oi) => {
+          if (oi === i) return;
+          minOtherCoverage = Math.min(minOtherCoverage, Math.hypot(tm.x - op2.x, tm.y - op2.y));
+        });
+        // Score: prefer nearby uncovered teammates, bias toward own-half side (lower y = farther up)
+        const forwardBonus = (HALF_PY - tm.y) * 0.3;
+        const score = minOtherCoverage * 0.6 - dToMe * 0.4 + forwardBonus;
+        if (score > bestScore) { bestScore = score; bestTM = tm; }
+      });
+
+      if (G.phase === 'flying' || G.phase === 'loose') {
+        // Also consider chasing ball directly if very close
+        const bd = Math.hypot(op.x - G.ball.x, op.y - G.ball.y);
+        if (bd < 80) {
+          tx = G.ball.x; ty = G.ball.y;
+        } else {
+          tx = bestTM ? bestTM.x : op.ox;
+          ty = bestTM ? bestTM.y : op.oy;
+        }
+      } else if (G.phase === 'dribble' && G.ballHolder !== null) {
+        // Converge on holder, but some opponents go toward support runners
+        if (i < 3) {
+          // First 3 press holder
+          tx = G.teammates[G.ballHolder].x;
+          ty = G.teammates[G.ballHolder].y;
+        } else {
+          tx = bestTM ? bestTM.x : G.teammates[G.ballHolder].x;
+          ty = bestTM ? bestTM.y : G.teammates[G.ballHolder].y;
+        }
+      } else {
+        // aim|place phase: cover freest teammate
+        tx = bestTM ? bestTM.x : op.ox;
+        ty = bestTM ? bestTM.y : op.oy;
+      }
+
+      const dx = tx - op.x, dy = ty - op.y;
+      const d  = Math.sqrt(dx*dx + dy*dy) || 1;
+      // Slow movement speed
+      const movSpd = op.spd * (G.phase === 'dribble' ? 1.0 : 0.75);
+      op.x += (dx/d) * movSpd;
+      op.y += (dy/d) * movSpd;
+    }
+
+    // Clamp to field
+    op.x = clamp(op.x, PAD + 5, PAD + FPX_W - 5);
+    op.y = clamp(op.y, PAD + 5, PAD + FPX_H - 5);
+    // Opponents never enter own penalty area
+    if (op.y > OWN_PA_PY - 6) op.y = OWN_PA_PY - 6;
+  });
+}
+
+// ── Dribble / pass AI ───────────────────────────────────
+function updateDribble() {
+  G.dribbleTimer++;
+  const h = G.teammates[G.ballHolder];
+  if (!h) { doEnd(false, 'error'); return; }
+
+  // Check if an opponent is dangerously close → trigger early pass
+  let closestOppD = Infinity;
+  G.opponents.forEach(op => {
+    closestOppD = Math.min(closestOppD, Math.hypot(h.x - op.x, h.y - op.y));
+  });
+  const DANGER_D = 30; // px: pass if opponent this close
+
+  // Try to pass if:  (a) opponent too close, or (b) regular interval
+  const shouldTryPass =
+    (closestOppD < DANGER_D) ||
+    (G.dribbleTimer > 40 && G.dribbleTimer % 70 === 0);
+
+  if (shouldTryPass) {
+    // Find best open teammate ahead
+    let best = -1, bestScore = -Infinity;
+    G.teammates.forEach((tm, i) => {
+      if (i === G.ballHolder) return;
+      if (tm.y >= h.y + 5) return; // must be somewhat ahead
+      let minOD = Infinity;
+      G.opponents.forEach(op => {
+        minOD = Math.min(minOD, Math.hypot(tm.x - op.x, tm.y - op.y));
+      });
+      if (minOD < 25) return; // covered
+      // Score: forward + free space
+      const sc = (h.y - tm.y) * 1.2 + minOD * 0.25;
+      if (sc > bestScore) { bestScore = sc; best = i; }
+    });
+
+    if (best >= 0) {
+      const urgency = closestOppD < DANGER_D ? '緊急' : '';
+      setBanner('<span class="hl">#'+h.num+'→#'+G.teammates[best].num+'</span>' + urgency + 'パス！');
+      h.hasBall = false;
+      G.ballHolder = best;
+      G.teammates[best].hasBall = true;
+      G.dribbleTimer = 0;
+      return;
+    }
+  }
+
+  // Tackle check (only fail if really stuck – lenient)
+  if (closestOppD < 14) {
+    burst(h.x, h.y, '#ff4545');
+    if (Math.random() < 0.45) { setBanner('<span class="w">タックル！</span>かわした！'); return; }
+    doEnd(false, 'タックルされた！でもナイスチャレンジ！'); return;
+  }
+
+  // Move holder toward opponent half (slow)
+  const tgX = cx(CX_M), tgY = HALF_PY - 30;
+  const dx = tgX - h.x, dy = tgY - h.y;
+  const d  = Math.sqrt(dx*dx + dy*dy) || 1;
+  h.x += (dx/d) * 0.75;
+  h.y += (dy/d) * 0.75;
+  G.ball.x = h.x;
+  G.ball.y = h.y - 14;
+
+  // *** SUCCESS: use HALF_PY (same as drawn line) ***
+  if (h.y < HALF_PY) {
+    burst(h.x, h.y, '#00e5c8');
+    const pts = Math.max(40, Math.round(160 - G.timerF * 0.42));
+    G.score += pts;
+    doEnd(true, '#' + h.num + 'がハーフライン突破！', pts);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  INPUT
+// ═══════════════════════════════════════════════════════
+CV.addEventListener('click', onField);
+CV.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const r = CV.getBoundingClientRect(), t = e.touches[0];
+  onField({ clientX: t.clientX, clientY: t.clientY,
+            _r: r, _sx: CW/r.width, _sy: CH/r.height });
+}, { passive: false });
+
+function cvXY(e) {
+  const r  = e._r || CV.getBoundingClientRect();
+  const sx = e._sx || (CW / r.width);
+  const sy = e._sy || (CH / r.height);
+  return { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy };
+}
+
+function onField(e) {
+  if (G.ended) return;
+  const { x, y } = cvXY(e);
+
+  if (G.phase === 'place') {
+    if (x >= cx(GA_L) && x <= cx(GA_R) && y >= OWN_GA_PY && y <= OWN_GL_PY) {
+      G.ball.x = x; G.ball.y = y;
+      G.gk.x = x;   G.gk.y = y + 20;
+      G.phase = 'aim'; G.timerRunning = true;
+      setBanner('<span class="hl">②蹴る方向</span>をタップ！<span class="w">フリーな味方</span>を狙え！');
+    } else {
+      setBanner('⚠️ <span class="w">ゴールエリア（白枠）内</span>をタップして置こう！');
+    }
+    return;
+  }
+
+  if (G.phase === 'aim') {
+    G.phase = 'flying';
+    const dx = x - G.ball.x, dy = y - G.ball.y;
+    const d  = Math.sqrt(dx*dx + dy*dy) || 1;
+    const spd = KT[G.kickType].spd * G.power;
+    G.ball.vx = dx/d * spd;
+    G.ball.vy = dy/d * spd;
+    G.ball.trail = [];
+    setBanner('<span class="hl">' + KT[G.kickType].label + '</span>！');
+  }
+}
+
+CV.addEventListener('mousemove', e => {
+  if (G.phase !== 'aim') return;
+  const r = CV.getBoundingClientRect();
+  G.aimPt = { x:(e.clientX-r.left)*(CW/r.width), y:(e.clientY-r.top)*(CH/r.height) };
+});
+CV.addEventListener('mouseleave', () => G.aimPt = null);
+
+// ═══════════════════════════════════════════════════════
+//  DRAW
+// ═══════════════════════════════════════════════════════
+function draw() {
+  ctx.clearRect(0, 0, CW, CH);
+  drawField();
+  drawTimerBar();
+  drawTrailGfx();
+  drawTeammates();
+  drawOpponents();
+  drawGK();
+  drawBall();
+  if (G.phase === 'place') drawPlaceGuide();
+  if (G.phase === 'aim' && G.aimPt) drawAimLine();
+  drawParticles();
+}
+
+// ── Field ───────────────────────────────────────────────
+function drawField() {
+  // Grass stripes
+  const N = 10;
+  for (let i = 0; i < N; i++) {
+    ctx.fillStyle = i%2===0 ? '#1c6132' : '#1f6e38';
+    ctx.fillRect(PAD, PAD + i*(FPX_H/N), FPX_W, FPX_H/N + 1);
+  }
+
+  // Boundary
+  ctx.strokeStyle = 'rgba(255,255,255,.76)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(PAD, PAD, FPX_W, FPX_H);
+
+  // ── Halfway line (drawn at HALF_PY, same constant used for game logic)
+  ctx.save();
+  ctx.setLineDash([8, 6]);
+  ctx.strokeStyle = 'rgba(255,255,255,.55)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(PAD, HALF_PY);
+  ctx.lineTo(PAD + FPX_W, HALF_PY);
+  ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = 'rgba(255,255,255,.24)';
+  ctx.font = '10px Zen Kaku Gothic New';
+  ctx.fillText('ハーフライン', PAD + 4, HALF_PY - 4);
+
+  // Center circle
+  ctx.strokeStyle = 'rgba(255,255,255,.24)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(cx(CX_M), HALF_PY, CC_R * SC, 0, Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx(CX_M), HALF_PY, 2.5, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,.38)'; ctx.fill();
+
+  // Half tints
+  ctx.fillStyle = 'rgba(77,166,255,.035)';
+  ctx.fillRect(PAD, HALF_PY, FPX_W, OWN_GL_PY - HALF_PY);
+  ctx.fillStyle = 'rgba(255,69,69,.035)';
+  ctx.fillRect(PAD, PAD, FPX_W, HALF_PY - PAD);
+
+  // ── OWN SIDE (bottom) ──
+  // Penalty area
+  const pa_cx1 = cx(PA_L), pa_cx2 = cx(PA_R), pa_cw = pa_cx2 - pa_cx1;
+  ctx.strokeStyle = 'rgba(255,255,255,.52)'; ctx.lineWidth = 1.5;
+  ctx.strokeRect(pa_cx1, OWN_PA_PY, pa_cw, OWN_GL_PY - OWN_PA_PY);
+  // PA spot & arc
+  ctx.beginPath(); ctx.arc(cx(CX_M), cy(8), 2.2, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,.38)'; ctx.fill();
+  ctx.save(); ctx.beginPath();
+  ctx.arc(cx(CX_M), cy(8), CC_R*SC, Math.PI*1.14, Math.PI*1.86, true);
+  ctx.strokeStyle = 'rgba(255,255,255,.30)'; ctx.lineWidth = 1.4; ctx.stroke(); ctx.restore();
+  // Goal area (highlight during place phase)
+  const ga_cx1 = cx(GA_L), ga_cw = cx(GA_R) - cx(GA_L);
+  const gaAct = G.phase === 'place';
+  if (gaAct) { ctx.fillStyle = 'rgba(0,229,200,.08)'; ctx.fillRect(ga_cx1, OWN_GA_PY, ga_cw, OWN_GL_PY - OWN_GA_PY); }
+  ctx.strokeStyle = gaAct ? 'rgba(0,229,200,.85)' : 'rgba(255,255,255,.60)';
+  ctx.lineWidth = gaAct ? 2.5 : 1.5;
+  ctx.strokeRect(ga_cx1, OWN_GA_PY, ga_cw, OWN_GL_PY - OWN_GA_PY);
+  if (gaAct) {
+    ctx.fillStyle = 'rgba(0,229,200,.78)'; ctx.font = 'bold 10px Zen Kaku Gothic New';
+    ctx.textAlign = 'center'; ctx.fillText('ここに置く', cx(CX_M), OWN_GA_PY - 5);
+    ctx.textAlign = 'left';
+  }
+  drawGoal(cx(GL_L), cx(GL_R), OWN_GL_PY, 'down');
+
+  // ── OPP SIDE (top) ──
+  // Penalty area
+  ctx.strokeStyle = 'rgba(255,255,255,.52)'; ctx.lineWidth = 1.5;
+  ctx.strokeRect(pa_cx1, OPP_GL_PY, pa_cw, OPP_PA_PY - OPP_GL_PY);
+  // PA spot & arc
+  ctx.beginPath(); ctx.arc(cx(CX_M), cy(FM_H - 8), 2.2, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,.38)'; ctx.fill();
+  ctx.save(); ctx.beginPath();
+  ctx.arc(cx(CX_M), cy(FM_H-8), CC_R*SC, Math.PI*0.14, Math.PI*0.86, false);
+  ctx.strokeStyle = 'rgba(255,255,255,.30)'; ctx.lineWidth = 1.4; ctx.stroke(); ctx.restore();
+  // Goal area
+  ctx.strokeStyle = 'rgba(255,255,255,.60)'; ctx.lineWidth = 1.5;
+  ctx.strokeRect(ga_cx1, OPP_GL_PY, ga_cw, OPP_GA_PY - OPP_GL_PY);
+  drawGoal(cx(GL_L), cx(GL_R), OPP_GL_PY, 'up');
+}
+
+function drawGoal(x1, x2, gy, dir) {
+  const w = x2 - x1, ph = 13;
+  ctx.fillStyle = 'rgba(255,255,255,.88)';
+  if (dir === 'down') {
+    ctx.fillRect(x1-4, gy, 5, ph); ctx.fillRect(x2-1, gy, 5, ph);
+    ctx.fillRect(x1-4, gy, w+9, 4);
+  } else {
+    ctx.fillRect(x1-4, gy-ph, 5, ph); ctx.fillRect(x2-1, gy-ph, 5, ph);
+    ctx.fillRect(x1-4, gy-4, w+9, 4);
+    ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.fillRect(x1, gy-14, w, 14);
+    ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = .7;
+    for (let xi = x1; xi <= x2; xi += 9)  { ctx.beginPath(); ctx.moveTo(xi, gy-14); ctx.lineTo(xi, gy); ctx.stroke(); }
+    for (let yi = gy-14; yi <= gy; yi += 5){ ctx.beginPath(); ctx.moveTo(x1, yi); ctx.lineTo(x2, yi); ctx.stroke(); }
+  }
+}
+
+function drawTimerBar() {
+  if (!G.timerRunning) return;
+  const si = (G.stage-1) % N_STAGES;
+  const p  = G.timerF / TIMER_MAX[si];
+  ctx.fillStyle = 'rgba(0,0,0,.26)'; ctx.fillRect(PAD, PAD+2, FPX_W, 5);
+  ctx.fillStyle = `hsl(${120 - p*120},90%,55%)`;
+  ctx.fillRect(PAD, PAD+2, FPX_W*(1-p), 5);
+}
+
+function drawPlaceGuide() {
+  const p   = 0.5 + 0.5 * Math.sin(Date.now() * .004);
+  const x1  = cx(GA_L), w = cx(GA_R) - cx(GA_L);
+  ctx.save();
+  ctx.strokeStyle = `rgba(0,229,200,${0.4 + p*.5})`; ctx.lineWidth = 2 + p*1.5;
+  ctx.strokeRect(x1, OWN_GA_PY, w, OWN_GL_PY - OWN_GA_PY);
+  ctx.restore();
+}
+
+function drawTrailGfx() {
+  G.ball.trail.forEach((p, i) => {
+    const a = (i / G.ball.trail.length) * 0.52;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 4*(i/G.ball.trail.length), 0, Math.PI*2);
+    ctx.fillStyle = `rgba(247,212,76,${a})`; ctx.fill();
+  });
+}
+
+function drawTeammates() {
+  G.teammates.forEach((tm, i) => {
+    const { x, y }  = tm;
+    const pastHalf  = y < HALF_PY;   // above halfway line on canvas = past halfway in play
+    const holding   = i === G.ballHolder;
+    pShadow(x, y);
+    if (pastHalf || holding) {
+      ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI*2);
+      ctx.fillStyle = holding ? 'rgba(247,212,76,.17)' : 'rgba(0,229,200,.10)'; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI*2);
+    ctx.fillStyle = '#2466b8'; ctx.fill();
+    ctx.strokeStyle = holding ? '#f7d44c' : pastHalf ? '#00e5c8' : '#5ea8ff';
+    ctx.lineWidth = holding ? 2.5 : 1.8; ctx.stroke();
+    pLabel(x, y, tm.num, '#fff');
+    if ((G.phase==='aim'||G.phase==='place'||G.phase==='flying'||G.phase==='loose') && pastHalf && !holding) {
+      ctx.fillStyle = 'rgba(0,229,204,.80)'; ctx.font = 'bold 7px Zen Kaku Gothic New';
+      ctx.textAlign = 'center'; ctx.fillText('フリー', x, y-16); ctx.textAlign = 'left';
+    }
+    if (holding) {
+      ctx.fillStyle = 'rgba(247,212,76,.88)'; ctx.font = 'bold 7px Zen Kaku Gothic New';
+      ctx.textAlign = 'center'; ctx.fillText('▶DRIB', x, y-16); ctx.textAlign = 'left';
+    }
+  });
+}
+
+function drawOpponents() {
+  G.opponents.forEach(op => {
+    pShadow(op.x, op.y);
+    ctx.beginPath(); ctx.arc(op.x, op.y, 11, 0, Math.PI*2);
+    ctx.fillStyle = '#a81818'; ctx.fill();
+    ctx.strokeStyle = '#ff7070'; ctx.lineWidth = 1.8; ctx.stroke();
+    pLabel(op.x, op.y, 'D', '#fff');
+  });
+}
+
+function drawGK() {
+  const { x, y } = G.gk;
+  pShadow(x, y);
+  ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(0,229,200,.08)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI*2);
+  ctx.fillStyle = '#009976'; ctx.fill();
+  ctx.strokeStyle = '#00e5c8'; ctx.lineWidth = 2.2; ctx.stroke();
+  pLabel(x, y, 'GK', '#fff', 8);
+}
+
+function drawBall() {
+  const { x, y } = G.ball;
+  ctx.beginPath(); ctx.ellipse(x, y+6, 6, 2.5, 0, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(0,0,0,.19)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2);
+  ctx.fillStyle = '#f7d44c'; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.4; ctx.stroke();
+  ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(0,0,0,.20)'; ctx.fill();
+}
+
+function drawAimLine() {
+  const { x:bx, y:by } = G.ball, { x:ax, y:ay } = G.aimPt;
+  const col = KT[G.kickType].col;
+  ctx.save(); ctx.setLineDash([6, 5]);
+  ctx.strokeStyle = col + 'bb'; ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(ax, ay); ctx.stroke(); ctx.restore();
+  const ang = Math.atan2(ay-by, ax-bx); ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.moveTo(ax+Math.cos(ang)*9,  ay+Math.sin(ang)*9);
+  ctx.lineTo(ax+Math.cos(ang+2.5)*6, ay+Math.sin(ang+2.5)*6);
+  ctx.lineTo(ax+Math.cos(ang-2.5)*6, ay+Math.sin(ang-2.5)*6);
+  ctx.closePath(); ctx.fill();
+}
+
+function drawParticles() {
+  G.particles.forEach(p => {
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fillStyle = p.col; ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+// ─── helpers ────────────────────────────────────────────
+function pShadow(x,y){ ctx.beginPath();ctx.ellipse(x,y+10,8,3.5,0,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,.16)';ctx.fill(); }
+function pLabel(x,y,t,c,fs=8){ ctx.fillStyle=c;ctx.font=`bold ${fs}px Orbitron`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,x,y);ctx.textAlign='left';ctx.textBaseline='alphabetic'; }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function burst(x,y,col){ for(let i=0;i<20;i++){const a=Math.random()*Math.PI*2,s=Math.random()*3.5+1;G.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:Math.random()*4+2,life:1,col});} }
+function spawnTrail(){ if(Math.random()<.28) G.particles.push({x:G.ball.x+(Math.random()-.5)*4,y:G.ball.y+(Math.random()-.5)*4,vx:(Math.random()-.5)*.7,vy:(Math.random()-.5)*.7,r:Math.random()*2.5+1,life:.6,col:KT[G.kickType].col}); }
+function advParticles(){ G.particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.055;p.life-=.022;});G.particles=G.particles.filter(p=>p.life>0); }
+
+// ═══════════════════════════════════════════════════════
+//  ROUND END
+// ═══════════════════════════════════════════════════════
+function doEnd(success, msg, pts=0, halfline) {
+  if (G.ended) return;
+  G.ended = true; cancelAnimationFrame(G.rafId);
+  G.phase = 'result'; G.timerRunning = false;
+  const full = halfline === undefined ? success : halfline;
+  updateScore();
+  document.getElementById('ov-icon').textContent  = full ? '🎉' : success ? '👍' : '😅';
+  document.getElementById('ov-title').textContent = full ? '突破成功！' : success ? '前進した！' : '失敗…';
+  document.getElementById('ov-pts').textContent   = pts > 0 ? '+' + pts + ' pts' : '';
+  document.getElementById('ov-msg').textContent   = msg;
+  document.getElementById('overlay').classList.add('show');
+  if (full) {
+    G.successCount++;
+    if (G.successCount % 3 === 0 && G.stage < N_STAGES) G.stage++;
+  }
+}
+function nextRound()  { document.getElementById('overlay').classList.remove('show'); initRound(); }
+function resetRound() { document.getElementById('overlay').classList.remove('show'); initRound(); }
+
+// ═══════════════════════════════════════════════════════
+//  UI
+// ═══════════════════════════════════════════════════════
+function setBanner(h)   { document.getElementById('phase-banner').innerHTML = h; }
+function updateScore()  { document.getElementById('score-disp').textContent = '🏆 ' + G.score; }
+function setKT(t) {
+  G.kickType = t;
+  ['kick','throw','long'].forEach(k =>
+    document.getElementById('btn-kt-' + k).classList.toggle('on', k === t));
+}
+document.getElementById('pw-bg').addEventListener('click', e => {
+  const r = document.getElementById('pw-bg').getBoundingClientRect();
+  G.power = clamp((e.clientX - r.left) / r.width, .2, 1); updatePw();
+});
+document.getElementById('field-wrap').addEventListener('wheel', e => {
+  e.preventDefault(); G.power = clamp(G.power - e.deltaY * .001, .2, 1); updatePw();
+}, { passive: false });
+function updatePw() {
+  document.getElementById('pw-fill').style.width = (G.power*100) + '%';
+  document.getElementById('pw-label').textContent = Math.round(G.power*100) + '%';
+}
+function showHelp() {
+  document.getElementById('ov-icon').textContent  = '📋';
+  document.getElementById('ov-title').textContent = 'ゲームの流れ';
+  document.getElementById('ov-pts').textContent   = '';
+  document.getElementById('ov-msg').innerHTML =
+    '<b>①置く</b>：ゴールエリア内タップ<br>' +
+    '<b>②蹴る</b>：方向をタップして発射！<br><br>' +
+    '味方は敵が近づくと<b>逃げながら</b>フリーになる。<br>' +
+    'ボールを受けたら<b>ドリブル＆自動パス</b>。<br>' +
+    '敵が迫ったら即パスで切り抜ける！<br><br>' +
+    '<b>ハーフライン</b>を越えれば突破成功🎉<br>' +
+    '赤Dへの直撃のみ失敗です。';
+  document.getElementById('overlay').classList.add('show');
+}
+
+// ── Responsive ──────────────────────────────────────────
+function resize() {
+  const w = Math.min(window.innerWidth - 12, 520);
+  CV.style.width  = w + 'px';
+  CV.style.height = Math.round(CH * (w / CW)) + 'px';
+}
+window.addEventListener('resize', resize); resize();
+
+// ── Start ───────────────────────────────────────────────
+initRound();
+</script>
+</body>
+</html>
