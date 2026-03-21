@@ -290,31 +290,22 @@ function formationPts(lines, yLines, jitterY=2.5, heat=null, baseSPD=null){
   return pts;
 }
 
-// Y-line centers for teammate formations
-// Own half: y=5 (own PA edge) … y=39 (halfway zone)
-// lines go back→front: line[last]=back (low y), line[0]=front (high y)
-function tmYLines(lines){
-  const n=lines.length;
-  // back line: y~15 (just above PA), front line: y~36 (near halfway)
-  const yMin=15, yMax=36;
-  return lines.map((_,i)=>yMin+(i/(Math.max(n-1,1)))*(yMax-yMin));
-  // i=0→back(yMin), i=last→front(yMax)  BUT we want lines[0]=front
-  // So reverse:
-}
+// Formation notation: 後-中-前 (back to front)
+// lines[0] = back (lowest y, closest to own goal)
+// lines[last] = front (highest y, closest to halfway)
+// Teammates: y=15(back) … y=36(front)
 function tmYLinesForward(lines){
   const n=lines.length;
   const yMin=15, yMax=36;
-  // lines[0]=front(yMax), lines[last]=back(yMin)
-  return lines.map((_,i)=>yMax - (i/(Math.max(n-1,1)))*(yMax-yMin));
+  // i=0 → yMin (back), i=n-1 → yMax (front)
+  return lines.map((_,i)=>yMin + (i/Math.max(n-1,1))*(yMax-yMin));
 }
 
-// Y-line centers for opponent formations
-// Opponents: y=12 (own PA edge) … y=39 (halfway zone, same field)
+// Opponents: y=13(back) … y=38(front)
 function opYLinesForward(lines){
   const n=lines.length;
   const yMin=13, yMax=38;
-  // lines[0]=front(yMax), lines[last]=back(yMin)
-  return lines.map((_,i)=>yMax - (i/(Math.max(n-1,1)))*(yMax-yMin));
+  return lines.map((_,i)=>yMin + (i/Math.max(n-1,1))*(yMax-yMin));
 }
 
 function genTeammates(){
@@ -532,12 +523,17 @@ function updateTeammates(){
     if(G.phase==='flying'||G.phase==='loose'||G.phase==='pass'){
       const bd=Math.hypot(tm.mx-G.ball.mx,tm.my-G.ball.my);
       if(bd<R_TM_BALL){
-        // Predict where ball will be in tmPredFrames frames
+        // Close enough: move toward predicted ball position
         const pred=Brain.predictBall(Brain.tmPredFrames);
         const tgx=pred?pred.mx:G.ball.mx;
         const tgy=pred?pred.my:G.ball.my;
         const dx=tgx-tm.mx,dy=tgy-tm.my,d=Math.sqrt(dx*dx+dy*dy)||1;
         tm.mx+=(dx/d)*mps(TM_CHASE_BALL_MS); tm.my+=(dy/d)*mps(TM_CHASE_BALL_MS);
+        clampTM(tm, i); return;
+      } else if(bd>30){
+        // Far from ball: drift closer at walk pace
+        const dx=G.ball.mx-tm.mx,dy=G.ball.my-tm.my,d=Math.sqrt(dx*dx+dy*dy)||1;
+        tm.mx+=(dx/d)*mps(2.0); tm.my+=(dy/d)*mps(2.0);
         clampTM(tm, i); return;
       }
     }
@@ -624,10 +620,10 @@ function clampTM(tm, idx){
   if(idx !== 0 && tm.my < OWN_PA+0.5){
     tm.my = OWN_PA+0.5;
   }
-  // Teammates never move past the offside line (minus a 0.5m margin)
-  // This prevents them from drifting into offside positions
-  if(G._offsideLine!=null && G._offsideLine > HALF){
-    const maxY = G._offsideLine - 0.5;
+  // Offside line: soft prevention — push back only 70% of frames, 2m margin
+  // This means players sometimes drift slightly into offside (realistic)
+  if(G._offsideLine!=null && G._offsideLine>HALF && Math.random()<0.70){
+    const maxY = G._offsideLine - 2.0;
     if(tm.my > maxY) tm.my = maxY;
   }
 }
@@ -930,18 +926,17 @@ function onField(e){
     G.ball.vmx=dx/d*spd; G.ball.vmy=dy/d*spd; G.ball.trail=[];
     flagOffsideAtPass(G.ball.my);
     setBanner('<span class="hl">'+KT[G.kickType].label+'</span>！');
-  }
-  // Dribble phase: tap anywhere to kick ball in that direction
-  if(G.phase==='dribble' && G.ballHolder!==null){
+  } else if(G.phase==='dribble' && G.ballHolder!==null){
+    // Tap to kick from ball's current position toward tapped point
     const h=G.teammates[G.ballHolder];
-    const dx=mx-h.mx, dy=my-h.my, d=Math.sqrt(dx*dx+dy*dy)||1;
+    const bx=G.ball.mx, by=G.ball.my;
+    const dx=mx-bx, dy=my-by, d=Math.sqrt(dx*dx+dy*dy)||1;
     const spd=ktSpd();
-    G.ball.mx=h.mx; G.ball.my=h.my;
     G.ball.vmx=dx/d*spd; G.ball.vmy=dy/d*spd; G.ball.trail=[];
     h.hasBall=false; h._passTgt=null;
     G.ballHolder=null;
     G.phase='flying';
-    flagOffsideAtPass(G.ball.my);
+    flagOffsideAtPass(by);
     setBanner('<span class="hl">キック！</span>');
   }
 }
