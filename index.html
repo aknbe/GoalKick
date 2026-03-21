@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GKトレーニング 8v8 — 使い方ガイド</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green-dark:#0a1f10;
+  --green-mid:#0f3018;
+  --green-field:#1a5c28;
+  --green-stripe:#1e6a30;
+  --cyan:#00e5c8;
+  --gold:#f5c842;
+  --red:#ff3c3c;
+  --blue:#4da6ff;
+  --white:#f0f8f2;
+  --muted:#6aaa80;
+  --card:#0d2a16;
+  --border:rgba(0,229,200,.18);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--green-dark);
+  color:var(--white);
+  font-family:'Zen Kaku Gothic New',sans-serif;
+  line-height:1.7;
+  overflow-x:hidden;
+}
+
+/* ── FIELD TEXTURE BACKGROUND ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:repeating-linear-gradient(
+    180deg,
+    rgba(255,255,255,.013) 0px,
+    rgba(255,255,255,.013) 40px,
+    transparent 40px,
+    transparent 80px
+  );
+  pointer-events:none;z-index:0;
+}
+
+/* ── HERO ── */
+.hero{
+  position:relative;
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;
+  padding:60px 24px 80px;
+  overflow:hidden;
+}
+.hero::after{
+  content:'';
+  position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:600px;height:600px;
+  background:radial-gradient(circle, rgba(0,229,200,.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-badge{
+  display:inline-block;
+  background:rgba(0,229,200,.12);
+  border:1px solid var(--cyan);
+  color:var(--cyan);
+  font-family:'Space Mono',monospace;
+  font-size:.72rem;letter-spacing:.12em;
+  padding:5px 14px;border-radius:20px;
+  margin-bottom:28px;
+  animation:fadeUp .8s ease both;
+}
+.hero-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3.2rem,12vw,7rem);
+  letter-spacing:.04em;
+  line-height:.95;
+  color:var(--white);
+  margin-bottom:8px;
+  animation:fadeUp .8s .1s ease both;
+}
+.hero-title span{color:var(--cyan);}
+.hero-sub{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(1.2rem,4vw,2rem);
+  color:var(--muted);
+  letter-spacing:.12em;
+  margin-bottom:32px;
+  animation:fadeUp .8s .2s ease both;
+}
+.hero-desc{
+  max-width:480px;
+  font-size:.96rem;
+  color:#a8c8b4;
+  margin-bottom:44px;
+  animation:fadeUp .8s .3s ease both;
+}
+.cta-btn{
+  display:inline-block;
+  background:var(--cyan);
+  color:#000;
+  font-family:'Zen Kaku Gothic New',sans-serif;
+  font-weight:900;font-size:1.05rem;
+  padding:14px 40px;border-radius:50px;
+  text-decoration:none;
+  box-shadow:0 0 32px rgba(0,229,200,.4);
+  transition:all .2s;
+  animation:fadeUp .8s .4s ease both;
+}
+.cta-btn:hover{
+  background:#fff;
+  box-shadow:0 0 48px rgba(0,229,200,.6);
+  transform:translateY(-2px);
+}
+
+/* ── FIELD DIAGRAM ── */
+.field-wrap{
+  position:relative;
+  width:min(280px,60vw);
+  margin:0 auto 16px;
+  animation:fadeUp .8s .15s ease both;
+}
+.field-svg{width:100%;filter:drop-shadow(0 0 24px rgba(0,229,200,.15));}
+
+/* ── SECTION COMMON ── */
+section{position:relative;z-index:1;padding:80px 20px;}
+.section-inner{max-width:720px;margin:0 auto;}
+.section-label{
+  font-family:'Space Mono',monospace;
+  font-size:.68rem;letter-spacing:.18em;
+  color:var(--cyan);
+  text-transform:uppercase;
+  margin-bottom:10px;
+  opacity:.8;
+}
+.section-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2rem,6vw,3rem);
+  letter-spacing:.06em;
+  margin-bottom:32px;
+  line-height:1;
+}
+
+/* ── STEP CARDS ── */
+.steps{display:flex;flex-direction:column;gap:16px;}
+.step{
+  display:flex;align-items:flex-start;gap:16px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px 22px;
+  transition:border-color .2s,transform .2s;
+}
+.step:hover{border-color:var(--cyan);transform:translateX(4px);}
+.step-num{
+  flex-shrink:0;
+  width:38px;height:38px;
+  background:var(--cyan);
+  color:#000;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.3rem;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+}
+.step-body h3{font-size:.98rem;font-weight:700;margin-bottom:4px;}
+.step-body p{font-size:.86rem;color:#8abda0;line-height:1.6;}
+.step-body strong{color:var(--gold);}
+
+/* ── KICK TYPE CARDS ── */
+.kick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:8px;}
+.kick-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;padding:20px 18px;
+  transition:border-color .2s;
+}
+.kick-card:hover{border-color:var(--gold);}
+.kick-icon{font-size:1.8rem;margin-bottom:8px;}
+.kick-name{font-weight:900;font-size:.95rem;margin-bottom:4px;}
+.kick-name.blue{color:var(--blue);}
+.kick-name.gold{color:var(--gold);}
+.kick-name.red{color:var(--red);}
+.kick-detail{font-size:.82rem;color:#7aaa8c;line-height:1.55;}
+.kick-detail b{color:var(--white);}
+
+/* ── SCORE TABLE ── */
+.score-table{width:100%;border-collapse:collapse;margin-top:8px;}
+.score-table th{
+  font-family:'Space Mono',monospace;
+  font-size:.72rem;letter-spacing:.08em;
+  color:var(--muted);text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+}
+.score-table td{
+  padding:12px 14px;font-size:.88rem;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.score-table tr:last-child td{border-bottom:none;}
+.score-table td:last-child{text-align:right;font-family:'Space Mono',monospace;font-weight:700;}
+.pts-high{color:var(--cyan);}
+.pts-mid{color:var(--gold);}
+.pts-low{color:var(--muted);}
+.pts-neg{color:var(--red);}
+
+/* ── FEATURE PILLS ── */
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+.feature{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;padding:16px 18px;
+  display:flex;gap:12px;align-items:flex-start;
+}
+.feature-icon{font-size:1.4rem;flex-shrink:0;margin-top:2px;}
+.feature h4{font-size:.9rem;font-weight:700;margin-bottom:3px;}
+.feature p{font-size:.80rem;color:#7aaa8c;line-height:1.5;}
+
+/* ── OFFSIDE ── */
+.offside-box{
+  background:rgba(255,170,0,.07);
+  border:1px solid rgba(255,170,0,.35);
+  border-radius:12px;
+  padding:22px 24px;
+  margin-top:24px;
+}
+.offside-box h3{color:#ffb020;font-size:1rem;margin-bottom:10px;}
+.offside-box p{font-size:.86rem;color:#c8aa80;line-height:1.65;}
+
+/* ── FORMATION TABLE ── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:8px;}
+.form-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:14px 12px;text-align:center;
+}
+.form-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.5rem;color:var(--cyan);letter-spacing:.06em;
+}
+.form-desc{font-size:.76rem;color:#6aaa80;margin-top:4px;line-height:1.4;}
+
+/* ── LEARNING SECTION ── */
+.learn-stages{display:flex;flex-direction:column;gap:10px;margin-top:8px;}
+.learn-stage{
+  display:flex;align-items:center;gap:14px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:14px 18px;
+}
+.learn-dot{
+  width:12px;height:12px;border-radius:50%;flex-shrink:0;
+}
+.learn-stage p{font-size:.84rem;color:#8abda0;}
+.learn-stage strong{color:var(--white);}
+
+/* ── SHARE ── */
+.share-box{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:24px 26px;
+  margin-top:8px;
+}
+.share-box code{
+  display:block;
+  background:rgba(0,0,0,.4);
+  border-radius:8px;
+  padding:10px 14px;
+  font-family:'Space Mono',monospace;
+  font-size:.78rem;
+  color:var(--cyan);
+  margin:10px 0;
+  word-break:break-all;
+}
+.share-box p{font-size:.85rem;color:#7aaa8c;line-height:1.6;}
+
+/* ── FOOTER ── */
+footer{
+  text-align:center;padding:40px 20px;
+  border-top:1px solid var(--border);
+  color:var(--muted);font-size:.8rem;
+  position:relative;z-index:1;
+}
+
+/* ── DIVIDER ── */
+.divider{
+  width:60px;height:3px;
+  background:linear-gradient(90deg,var(--cyan),var(--gold));
+  border-radius:2px;margin-bottom:28px;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(24px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease;}
+.reveal.visible{opacity:1;transform:none;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--green-dark);}
+::-webkit-scrollbar-thumb{background:var(--green-mid);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+  HERO
+══════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-badge">⚽ GKトレーニング 8v8 — 使い方ガイド</div>
+
+  <!-- Mini field diagram -->
+  <div class="field-wrap">
+    <svg class="field-svg" viewBox="0 0 200 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="280" rx="4" fill="#1a5c28"/>
+      <!-- Stripes -->
+      <rect y="0" width="200" height="28" fill="#1e6a30" opacity=".7"/>
+      <rect y="56" width="200" height="28" fill="#1e6a30" opacity=".7"/>
+      <rect y="112" width="200" height="28" fill="#1e6a30" opacity=".7"/>
+      <rect y="168" width="200" height="28" fill="#1e6a30" opacity=".7"/>
+      <rect y="224" width="200" height="28" fill="#1e6a30" opacity=".7"/>
+      <!-- Border -->
+      <rect x="6" y="6" width="188" height="268" rx="2" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>
+      <!-- Halfway -->
+      <line x1="6" y1="140" x2="194" y2="140" stroke="rgba(255,255,255,.5)" stroke-width="1.5" stroke-dasharray="6,5"/>
+      <!-- Center circle -->
+      <circle cx="100" cy="140" r="28" stroke="rgba(255,255,255,.3)" stroke-width="1.2"/>
+      <circle cx="100" cy="140" r="2.5" fill="rgba(255,255,255,.5)"/>
+      <!-- Own PA -->
+      <rect x="38" y="220" width="124" height="48" rx="1" stroke="rgba(255,255,255,.5)" stroke-width="1.2"/>
+      <!-- Own GA -->
+      <rect x="70" y="252" width="60" height="22" rx="1" stroke="rgba(255,255,255,.5)" stroke-width="1.2"/>
+      <!-- Own goal -->
+      <rect x="82" y="272" width="36" height="8" rx="1" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/>
+      <!-- Opp PA -->
+      <rect x="38" y="12" width="124" height="48" rx="1" stroke="rgba(255,255,255,.5)" stroke-width="1.2"/>
+      <!-- Opp GA -->
+      <rect x="70" y="6" width="60" height="22" rx="1" stroke="rgba(255,255,255,.5)" stroke-width="1.2"/>
+      <!-- Opp goal -->
+      <rect x="82" y="0" width="36" height="8" rx="1" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/>
+      <!-- GK -->
+      <circle cx="100" cy="263" r="7" fill="#009976" stroke="#00e5c8" stroke-width="1.5"/>
+      <!-- Teammates -->
+      <circle cx="60" cy="200" r="5.5" fill="#2466b8" stroke="#5ea8ff" stroke-width="1.2"/>
+      <circle cx="140" cy="200" r="5.5" fill="#2466b8" stroke="#5ea8ff" stroke-width="1.2"/>
+      <circle cx="80" cy="170" r="5.5" fill="#2466b8" stroke="#5ea8ff" stroke-width="1.2"/>
+      <circle cx="120" cy="170" r="5.5" fill="#2466b8" stroke="#5ea8ff" stroke-width="1.2"/>
+      <circle cx="65" cy="125" r="5.5" fill="#2466b8" stroke="#00e5c8" stroke-width="1.2"/>
+      <circle cx="135" cy="120" r="5.5" fill="#2466b8" stroke="#00e5c8" stroke-width="1.2"/>
+      <!-- Opponents -->
+      <circle cx="75" cy="90" r="5.5" fill="#a81818" stroke="#ff7070" stroke-width="1.2"/>
+      <circle cx="125" cy="95" r="5.5" fill="#a81818" stroke="#ff7070" stroke-width="1.2"/>
+      <circle cx="55" cy="145" r="5.5" fill="#a81818" stroke="#ff7070" stroke-width="1.2"/>
+      <circle cx="145" cy="145" r="5.5" fill="#a81818" stroke="#ff7070" stroke-width="1.2"/>
+      <!-- Ball -->
+      <circle cx="100" cy="260" r="4.5" fill="#f5c842" stroke="#fff" stroke-width="1"/>
+      <!-- Halfway label -->
+      <text x="8" y="136" fill="rgba(255,255,255,.4)" font-size="7" font-family="sans-serif">ハーフライン</text>
+    </svg>
+  </div>
+
+  <h1 class="hero-title">GK<span>トレーニング</span></h1>
+  <p class="hero-sub">8v8 ゴールキーパー配球トレーニング</p>
+  <p class="hero-desc">
+    ゴールキーパーの配球判断を磨くブラウザゲーム。<br>
+    ハーフラインを突破してスコアを稼ごう。
+  </p>
+  <a class="cta-btn" href="gk-goalkick-game.html">▶ ゲームをはじめる</a>
+</section>
+
+<!-- ══════════════════════════════════════════════
+  FLOW
+══════════════════════════════════════════════ -->
+<section>
+  <div class="section-inner reveal">
+    <p class="section-label">How to play</p>
+    <h2 class="section-title">ゲームの流れ</h2>
+    <div class="divider"></div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>ボールを置く</h3>
+          <p>キックタイプを選んで、許可ゾーン内をタップ。<br>
+          <strong>ゴールキック</strong>はゴールエリア内、<strong>スロー・パントキック</strong>はペナルティエリア内。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>方向をタップして蹴る</h3>
+          <p>蹴りたい方向をタップすると発射。<strong>パワーバー</strong>でボール速度（最大25m/s）を調整できます。スクロールでも変更可能。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>味方がキャッチ＆ドリブル</h3>
+          <p>フリーな味方がボールを受け取ったら自動でドリブル開始。<strong>ドリブル中にタップ</strong>するとそこへキックできます。敵が迫ったら自動でパスを選択。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>ハーフライン突破で成功</h3>
+          <p>味方がハーフラインを越えるとラウンド成功。<strong>残り時間が多いほど高得点</strong>。3連続成功でステージアップ。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+  KICK TYPES
+══════════════════════════════════════════════ -->
+<section style="padding-top:0;">
+  <div class="section-inner reveal">
+    <p class="section-label">Kick types</p>
+    <h2 class="section-title">キックの種類</h2>
+    <div class="divider"></div>
+    <div class="kick-grid">
+      <div class="kick-card">
+        <div class="kick-icon">⚽</div>
+        <div class="kick-name blue">ゴールキック</div>
+        <div class="kick-detail">
+          <b>配置:</b> ゴールエリア内<br>
+          <b>初期パワー:</b> 50%（12.5 m/s）<br>
+          直線的で扱いやすい。まず基本から。
+        </div>
+      </div>
+      <div class="kick-card">
+        <div class="kick-icon">🤲</div>
+        <div class="kick-name gold">スロー</div>
+        <div class="kick-detail">
+          <b>配置:</b> ペナルティエリア内<br>
+          <b>初期パワー:</b> 35%（8.75 m/s）<br>
+          低速で精密なパスに向く。近距離に有効。
+        </div>
+      </div>
+      <div class="kick-card">
+        <div class="kick-icon">🦵</div>
+        <div class="kick-name red">パントキック</div>
+        <div class="kick-detail">
+          <b>配置:</b> ペナルティエリア内<br>
+          <b>初期パワー:</b> 60%（15 m/s）<br>
+          長距離を狙えるが制御が難しい。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+  SCORING
+══════════════════════════════════════════════ -->
+<section style="padding-top:0;">
+  <div class="section-inner reveal">
+    <p class="section-label">Scoring</p>
+    <h2 class="section-title">ポイント計算</h2>
+    <div class="divider"></div>
+    <table class="score-table">
+      <thead>
+        <tr>
+          <th>結果</th>
+          <th>ポイント</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>🎉 ハーフライン突破（早い）</td>
+          <td class="pts-high">最大160pt</td>
+        </tr>
+        <tr>
+          <td>🎉 ハーフライン突破（遅い）</td>
+          <td class="pts-mid">最低40pt</td>
+        </tr>
+        <tr>
+          <td>👍 ハーフ越えで誰も受けられず</td>
+          <td class="pts-low">+20pt</td>
+        </tr>
+        <tr>
+          <td>👍 PAより前でボール停止</td>
+          <td class="pts-low">+8pt</td>
+        </tr>
+        <tr>
+          <td>⚠️ オフサイドでもハーフ越え</td>
+          <td class="pts-low">+15pt</td>
+        </tr>
+        <tr>
+          <td>😅 失敗・タイムアップ</td>
+          <td class="pts-low">0pt</td>
+        </tr>
+        <tr>
+          <td>💀 ゴール近くで失敗（最悪）</td>
+          <td class="pts-neg">最大 −50pt</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:.8rem;color:var(--muted);margin-top:14px;">
+      突破スコア計算式: <code style="background:rgba(0,0,0,.4);padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;font-size:.75rem;color:var(--cyan);">max(40, 160 − 経過フレーム × 0.42)</code>
+    </p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+  OFFSIDE
+══════════════════════════════════════════════ -->
+<section style="padding-top:0;">
+  <div class="section-inner reveal">
+    <p class="section-label">Offside rule</p>
+    <h2 class="section-title">オフサイドルール</h2>
+    <div class="divider"></div>
+    <div class="offside-box">
+      <h3>⚠️ オフサイドとは</h3>
+      <p>
+        <strong style="color:#fff;">ボールが蹴られた瞬間</strong>、相手陣（ハーフライン越え）かつ<br>
+        <strong style="color:#ffb020;">最終ディフェンダーより前</strong>（相手GKが1人目、最後尾フィールドプレイヤーが2人目）<br>
+        にいる味方プレイヤーにオフサイドフラグが立ちます。<br><br>
+        そのプレイヤーがボールを受けると<strong style="color:#ff6060;">オフサイド判定で失敗</strong>。<br>
+        ただしボールがハーフラインを越えてからオフサイドラインを越えた場合は<strong style="color:#f5c842;">+15pt</strong>。<br><br>
+        画面上の<strong style="color:#ffb020;">オレンジ点線</strong>がリアルタイムのオフサイドラインです。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+  FORMATIONS
+══════════════════════════════════════════════ -->
+<section style="padding-top:0;">
+  <div class="section-inner reveal">
+    <p class="section-label">Formations</p>
+    <h2 class="section-title">フォーメーション</h2>
+    <div class="divider"></div>
+    <p style="font-size:.88rem;color:var(--muted);margin-bottom:20px;">
+      表記は<strong style="color:var(--white);">後ろ − 中 − 前</strong>の順。味方・相手それぞれ独立して選択できます。
+    </p>
+    <div class="form-grid">
+      <div class="form-card">
+        <div class="form-name">3-3-1</div>
+        <div class="form-desc">守備重視。後ろ3人で安定した後方を作り、前線1人が走る。</div>
+      </div>
+      <div class="form-card">
+        <div class="form-name">2-3-2</div>
+        <div class="form-desc">バランス型。中盤3人が幅を作り、前線2人でフィニッシュ。</div>
+      </div>
+      <div class="form-card">
+        <div class="form-name">3-2-2</div>
+        <div class="form-desc">前線強化。前2人へのくさびパスを狙いやすい。</div>
+      </div>
+      <div class="form-card">
+        <div class="form-name">2-4-1</div>
+        <div class="form-desc">中盤支配。中盤4人が密集しパスコースを多く作る。</div>
+      </div>
+      <div class="form-card">
+        <div class="form-name">🎲</div>
+        <div class="form-desc">ランダム。毎ラウンド異なる配置になり予測不能。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+  LEARNING AI
+══════════════════════════════════════════════ -->
+<section style="padding-top:0;">
+  <div class="section-inner reveal">
+    <p class="section-label">AI Learning</p>
+    <h2 class="section-title">AIの学習システム</h2>
+    <div class="divider"></div>
+    <p style="font-size:.88rem;color:var(--muted);margin-bottom:20px;">
+      味方・敵の両AIがラウンドをまたいで学習します。学習データはブラウザに保存され、次回起動時も継続します。
+    </p>
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="feature-icon">🗺️</div>
+        <div>
+          <h4>ポジショニング学習</h4>
+          <p>ボールを受けやすかったゾーンをヒートマップで記憶。徐々に有利な位置取りを覚える。</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🤝</div>
+        <div>
+          <h4>マーク連携学習</h4>
+          <p>敵同士がどの味方を封じると効果的かを記憶。ラウンドを重ねるほど組織的なプレスに。</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔮</div>
+        <div>
+          <h4>ボール予測移動</h4>
+          <p>ボールの軌道から到達点を先読みして動く。成功が増えるほど予測精度が上がる。</p>
+        </div>
+      </div>
+    </div>
+    <div class="learn-stages" style="margin-top:24px;">
+      <p style="font-size:.8rem;color:var(--muted);margin-bottom:4px;">学習ステータス（画面上部に表示）</p>
+      <div class="learn-stage">
+        <div class="learn-dot" style="background:#6aaa80;"></div>
+        <p><strong>初心者（0〜4戦）</strong> — ランダムに探索中。行動は予測しにくい。</p>
+      </div>
+      <div class="learn-stage">
+        <div class="learn-dot" style="background:#4da6ff;"></div>
+        <p><strong>学習中（5〜19戦）</strong> — パターンが出始め、ポジションが安定してくる。</p>
+      </div>
+      <div class="learn-stage">
+        <div class="learn-dot" style="background:#f5c842;"></div>
+        <p><strong>上達中（20〜49戦）</strong> — マーク役割が固定化。より組織的な動きに。</p>
+      </div>
+      <div class="learn-stage">
+        <div class="learn-dot" style="background:#00e5c8;"></div>
+        <p><strong>熟練以上（50戦〜）</strong> — 先読み移動と連携プレスが機能し始める。</p>
+      </div>
+    </div>
+    <p style="font-size:.8rem;color:var(--muted);margin-top:16px;">
+      🗑 学習リセットボタンで初期状態に戻せます。
+    </p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+  TIPS
+══════════════════════════════════════════════ -->
+<section style="padding-top:0;">
+  <div class="section-inner reveal">
+    <p class="section-label">Tips</p>
+    <h2 class="section-title">攻略のヒント</h2>
+    <div class="divider"></div>
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="feature-icon">🎯</div>
+        <div>
+          <h4>フリーな味方を狙う</h4>
+          <p>「フリー」ラベルが出ている味方は敵から遠い。そこへ蹴ると高確率でキャッチできる。</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⚡</div>
+        <div>
+          <h4>早く蹴るほど高得点</h4>
+          <p>プレス遅延が切れる前（タイマー開始直後）に蹴ると敵の反応が遅い。素早い判断が鍵。</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📐</div>
+        <div>
+          <h4>オフサイドラインを見る</h4>
+          <p>オレンジ点線より前にいる選手は受け取れない。ライン手前の選手を狙おう。</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🚀</div>
+        <div>
+          <h4>ドリブル中のキック</h4>
+          <p>ドリブル中にフィールドをタップすると、ボール保持者がその方向へキックする。</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🏋️</div>
+        <div>
+          <h4>フォーメーションを変える</h4>
+          <p>敵が強くなったら味方フォーメーションを変えてみよう。配置が変わるとパスコースも変わる。</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📊</div>
+        <div>
+          <h4>戦数を重ねる</h4>
+          <p>AIは学習する。多くプレイするほど味方が賢くなり、敵も手強くなる。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+  CTA
+══════════════════════════════════════════════ -->
+<section style="text-align:center;padding-bottom:100px;">
+  <div class="section-inner reveal">
+    <h2 class="section-title" style="font-size:clamp(2.5rem,8vw,4.5rem);">さあ、始めよう</h2>
+    <p style="color:var(--muted);margin-bottom:36px;font-size:.95rem;">ゴールキーパーの配球センスを磨く時間。</p>
+    <a class="cta-btn" href="gk-goalkick-game.html" style="font-size:1.1rem;padding:16px 52px;">▶ ゲームをはじめる</a>
+  </div>
+</section>
+
+<footer>
+  <p>GKトレーニング 8v8 &nbsp;|&nbsp; ブラウザで動くGKキックゲーム</p>
+  <p style="margin-top:6px;font-size:.74rem;opacity:.5;">学習データはブラウザのlocalStorageに保存されます</p>
+</footer>
+
+<script>
+// Scroll reveal
+const reveals=document.querySelectorAll('.reveal');
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target);}
+  });
+},{threshold:.1});
+reveals.forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

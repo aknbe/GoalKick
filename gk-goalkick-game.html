@@ -38,8 +38,8 @@ canvas{display:block;width:100%;}
 #legend{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;font-size:.70rem;color:#7aaa8d;}
 .leg{display:flex;align-items:center;gap:4px;}
 .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
-#overlay{display:none;position:absolute;top:8px;left:50%;transform:translateX(-50%);
-  z-index:200;align-items:flex-start;justify-content:center;width:92%;pointer-events:auto;}
+#overlay{display:none;position:absolute;left:50%;transform:translateX(-50%);
+  z-index:200;align-items:flex-start;justify-content:center;width:80%;pointer-events:auto;}
 #overlay.show{display:flex;}
 .ov-box{background:rgba(8,20,14,0.93);border:2.5px solid var(--cyan);border-radius:12px;
   padding:12px 18px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.55);
@@ -640,13 +640,15 @@ function updateOpponents(){
       if(d<R_OP_SEP){const s=((R_OP_SEP-d)/R_OP_SEP)*mps(4.6);sepx+=(dx/d)*s;sepy+=(dy/d)*s;}
     });
     if(!G.pressDelayPassed&&G.phase!=='flying'&&G.phase!=='loose'&&G.phase!=='pass'&&G.phase!=='dribble'){
-      // Patrol
+      // Patrol — keep 5m from sidelines
       op.pTimer++;
       if(op.pTimer>80+i*6){op.pTimer=0;op.pAngle+=(Math.random()-.5)*1.2;}
       const ptx=op.omx+Math.sin(now*.28+op.anim)*4.9;
       const pty=op.omy+Math.cos(now*.22+op.anim)*1.85;
       op.mx+=(ptx-op.mx)*.10+sepx*.3;
       op.my+=(pty-op.my)*.10+sepy*.3;
+      // Clamp x: stay at least 5m from each sideline during pre-press phase
+      op.mx=clamp(op.mx, 5.0, FW-5.0);
     } else {
       // Find freest teammate — skip offside players (they're no threat)
       let bestTM=null,bestScore=-Infinity;
@@ -740,7 +742,6 @@ function updateDribble(){
 
   if(shouldTryPass && h._passTgt==null){
     let best=-1, bestSc=-Infinity;
-    // Current facing direction (for cone filter)
     const facingAng = h._dribAngle ?? Math.PI/2;
 
     G.teammates.forEach((tm,i)=>{
@@ -748,23 +749,39 @@ function updateDribble(){
       // Min opponent distance from target player
       let minOD=Infinity;
       G.opponents.forEach(op=>{minOD=Math.min(minOD,Math.hypot(tm.mx-op.mx,tm.my-op.my));});
-      // In danger: lower threshold (2m OK); normal: 3m
       const coverThreshold = inDanger ? 2.0 : 3.0;
-      if(minOD < coverThreshold) return;  // covered — skip
+      if(minOD < coverThreshold) return;
 
-      // Direction filter: pass target should be within ±120° of facing direction
+      // ── Line-of-sight check: is an opponent on the pass lane? ──
+      // Project each opponent onto the line from h→tm.
+      // If any opponent is within 2.5m of the lane AND between h and tm → blocked.
+      const pdx=tm.mx-h.mx, pdy=tm.my-h.my;
+      const pLen=Math.sqrt(pdx*pdx+pdy*pdy)||1;
+      let laneBlocked=false;
+      G.opponents.forEach(op=>{
+        // Parameter t: projection of (op - h) onto (tm - h) direction
+        const t=((op.mx-h.mx)*pdx+(op.my-h.my)*pdy)/(pLen*pLen);
+        if(t<0.15||t>0.85) return;  // outside the lane segment
+        // Perpendicular distance from op to the lane
+        const perpX=h.mx+t*pdx-op.mx, perpY=h.my+t*pdy-op.my;
+        const perpD=Math.sqrt(perpX*perpX+perpY*perpY);
+        if(perpD<2.5) laneBlocked=true;
+      });
+      if(laneBlocked) return;
+
+      // Direction filter ±120°
       const passAng = Math.atan2(tm.my-h.my, tm.mx-h.mx);
       let angDiff = passAng - facingAng;
       while(angDiff > Math.PI) angDiff -= Math.PI*2;
       while(angDiff < -Math.PI) angDiff += Math.PI*2;
-      if(Math.abs(angDiff) > Math.PI*2/3) return;  // outside ±120° cone
+      if(Math.abs(angDiff) > Math.PI*2/3) return;
 
       const forwardBonus = (tm.my-h.my)*0.5;
       const sc = forwardBonus + minOD*0.9;
       if(sc>bestSc){bestSc=sc;best=i;}
     });
 
-    // In danger with no eligible target: try again without direction filter
+    // Fallback without LOS/direction filter if still in danger
     if(best<0 && inDanger){
       G.teammates.forEach((tm,i)=>{
         if(i===G.ballHolder) return;
@@ -778,7 +795,7 @@ function updateDribble(){
 
     if(best>=0){ h._passTgt=best; h._turnTimer=0; return; }
 
-    // In danger with STILL no target: pass to whoever is freest (no filter)
+    // Last resort: freest player regardless of everything
     if(inDanger){
       let fallback=-1, fallbackSc=-Infinity;
       G.teammates.forEach((tm,i)=>{
@@ -1410,7 +1427,18 @@ function doEnd(success,msg,pts=0,halfline){
   G.ended=true;cancelAnimationFrame(G.rafId);G.phase='result';G.timerRunning=false;
   Brain.onRoundEnd(halfline===undefined?success:halfline, pts);
   const full=halfline===undefined?success:halfline;updateScore();
-  // Set border color: success=cyan, failure=red, partial=gold
+
+  // Position overlay above ball stop point
+  const ov=document.getElementById('overlay');
+  const fw=document.getElementById('field-wrap');
+  // ball canvas y ratio (0=top of canvas, 1=bottom)
+  const ballCanvasY=(PAD+(FH-G.ball.my)*SC)/CH;
+  // place overlay above ball, clamped so it stays visible
+  const wrapH=fw.offsetHeight||400;
+  const boxH=120; // approx overlay height px
+  const topPx=clamp(ballCanvasY*wrapH - boxH - 12, 6, wrapH - boxH - 6);
+  ov.style.top=Math.round(topPx)+'px';
+
   const box=document.getElementById('ov-box');
   box.className='ov-box '+(full?'success':success?'partial':'failure');
   document.getElementById('ov-icon').textContent=full?'🎉':success?'👍':'😅';
