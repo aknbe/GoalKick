@@ -182,23 +182,23 @@ const GRID_X=15, GRID_Y=20, HEAT_SIZE=GRID_X*GRID_Y;
 const hIdx = (mx,my) => Math.min(GRID_X-1, Math.floor(mx/(FW/GRID_X))) * GRID_Y + Math.min(GRID_Y-1, Math.floor(my/(FH/GRID_Y)));
 const EPS0     = 0.42;
   
+// ====================== AI v3 + 学習システム ======================
 const Brain = {
   tmHeat: new Float32Array(HEAT_SIZE).fill(0),
   opHeat: new Float32Array(HEAT_SIZE).fill(0),
   opMarkPref: Array.from({length:7}, () => new Float32Array(7).fill(0)),
-  tmPredAcc: 0, opPredAcc: 0,
-  eps: 0.45, rounds: 0,
+  tmPredAcc: 0.0,
+  opPredAcc: 0.0,
+  eps: 0.45,
+  EPS0: 0.45,                    // ← ここで明確に定義
+  rounds: 0,
+
   tmHeatBias: new Float32Array(HEAT_SIZE).fill(0),
   opMarkAssign: new Array(7).fill(-1),
-  tmPredFrames: 0, opPredFrames: 0,
+  tmPredFrames: 0,
+  opPredFrames: 0,
 
-  _recompute(){
-    for(let i=0;i<HEAT_SIZE;i++) this.tmHeatBias[i] = this.tmHeat[i] * 2.4;
-    this.tmPredFrames = Math.round(this.tmPredAcc * 130);
-    this.opPredFrames = Math.round(this.opPredAcc * 110);
-    this.assignMarkRoles();
-  },
-
+  // マーク割り当て
   assignMarkRoles(){
     const assigned = new Set();
     this.opMarkAssign.fill(-1);
@@ -217,6 +217,17 @@ const Brain = {
     });
   },
 
+  // 予測
+  predictBall(frames){
+    if(frames <= 0 || G.phase === 'place' || G.phase === 'aim') return null;
+    let mx = G.ball.mx, my = G.ball.my, vmx = G.ball.vmx, vmy = G.ball.vmy;
+    for(let i = 0; i < frames; i++){
+      vmx *= BALL_DECAY; vmy *= BALL_DECAY;
+      mx += vmx; my += vmy;
+    }
+    return {mx: clamp(mx, 0.5, FW-0.5), my: clamp(my, 5.1, FH-0.5)};
+  },
+
   onBallCaught(tmIdx){
     const c = hIdx(G.teammates[tmIdx].mx, G.teammates[tmIdx].my);
     this.tmHeat[c] = Math.min(1.0, this.tmHeat[c] + 0.22);
@@ -224,19 +235,10 @@ const Brain = {
 
   onBallIntercepted(opIdx, tmIdx){
     if(opIdx < 0 || tmIdx < 0) return;
-    this.opMarkPref[opIdx][tmIdx] = Math.min(1.0, (this.opMarkPref[opIdx][tmIdx]||0) + 0.19);
+    this.opMarkPref[opIdx][tmIdx] = Math.min(1.0, (this.opMarkPref[opIdx][tmIdx] || 0) + 0.19);
   },
 
-  predictBall(frames){
-    if(frames <= 0 || G.phase === 'place' || G.phase === 'aim') return null;
-    let mx = G.ball.mx, my = G.ball.my, vmx = G.ball.vmx, vmy = G.ball.vmy;
-    for(let i=0; i<frames; i++){
-      vmx *= BALL_DECAY; vmy *= BALL_DECAY;
-      mx += vmx; my += vmy;
-    }
-    return {mx: Math.max(0.5, Math.min(FW-0.5, mx)), my: Math.max(5.1, Math.min(FH-0.5, my))};
-  },
-
+  // ラウンド終了時の学習
   onRoundEnd(success, pts){
     this.rounds++;
     const reward = success ? Math.min(1.8, pts/75) : -0.85;
@@ -252,9 +254,12 @@ const Brain = {
       this.opHeat[c] = Math.max(-1, Math.min(1, this.opHeat[c]));
     });
 
-    this.opMarkPref.forEach(row => row.forEach((v,i) => row[i] *= 0.965));
-    this.tmPredAcc = Math.max(0, Math.min(1, this.tmPredAcc + (success?0.085:-0.038)));
-    this.opPredAcc = Math.max(0, Math.min(1, this.opPredAcc + (success?-0.07:0.09)));
+    this.opMarkPref.forEach(row => {
+      for(let i = 0; i < row.length; i++) row[i] *= 0.965;
+    });
+
+    this.tmPredAcc = Math.max(0, Math.min(1, this.tmPredAcc + (success ? 0.085 : -0.038)));
+    this.opPredAcc = Math.max(0, Math.min(1, this.opPredAcc + (success ? -0.07 : 0.09)));
 
     this.eps = Math.max(0.04, this.eps - 0.011);
     this._recompute();
@@ -262,29 +267,71 @@ const Brain = {
     this.save();
   },
 
-  save(){ try{ localStorage.setItem('gk_brain_v3', JSON.stringify({
-    tmHeat:Array.from(this.tmHeat), opHeat:Array.from(this.opHeat),
-    opMarkPref:this.opMarkPref.map(r=>Array.from(r)),
-    tmPredAcc:this.tmPredAcc, opPredAcc:this.opPredAcc,
-    eps:this.eps, rounds:this.rounds
-  })); }catch(e){} },
+  _recompute(){
+    for(let i = 0; i < HEAT_SIZE; i++){
+      this.tmHeatBias[i] = this.tmHeat[i] * 2.4;
+    }
+    this.tmPredFrames = Math.round(this.tmPredAcc * 130);
+    this.opPredFrames = Math.round(this.opPredAcc * 110);
+    this.assignMarkRoles();
+  },
 
-  load(){ try{
-    const d = JSON.parse(localStorage.getItem('gk_brain_v3')||'{}');
-    if(d.tmHeat) this.tmHeat = new Float32Array(d.tmHeat);
-    if(d.opHeat) this.opHeat = new Float32Array(d.opHeat);
-    if(d.opMarkPref) this.opMarkPref = d.opMarkPref.map(r=>new Float32Array(r));
-    this.tmPredAcc = d.tmPredAcc||0; this.opPredAcc = d.opPredAcc||0;
-    this.eps = d.eps||0.45; this.rounds = d.rounds||0;
-    this._recompute();
-  }catch(e){} updateLearnBadge(); },
+  // ★★★ ここを修正：Promiseを返すようにする ★★★
+  save(){
+    try {
+      const data = JSON.stringify({
+        tmHeat: Array.from(this.tmHeat),
+        opHeat: Array.from(this.opHeat),
+        opMarkPref: this.opMarkPref.map(r => Array.from(r)),
+        tmPredAcc: this.tmPredAcc,
+        opPredAcc: this.opPredAcc,
+        eps: this.eps,
+        rounds: this.rounds
+      });
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('gk_brain_v3', data);
+      }
+    } catch(e) {}
+  },
+
+  load(){
+    return new Promise((resolve) => {
+      try {
+        if (typeof localStorage === 'undefined') {
+          resolve();
+          return;
+        }
+        const saved = localStorage.getItem('gk_brain_v3');
+        if (!saved) {
+          resolve();
+          return;
+        }
+        const d = JSON.parse(saved);
+        if (d.tmHeat) this.tmHeat = new Float32Array(d.tmHeat);
+        if (d.opHeat) this.opHeat = new Float32Array(d.opHeat);
+        if (d.opMarkPref) this.opMarkPref = d.opMarkPref.map(r => new Float32Array(r));
+        this.tmPredAcc = d.tmPredAcc ?? 0;
+        this.opPredAcc = d.opPredAcc ?? 0;
+        this.eps = d.eps ?? 0.45;
+        this.rounds = d.rounds ?? 0;
+        this._recompute();
+      } catch(e) {
+        console.warn("学習データの読み込みに失敗しました", e);
+      }
+      resolve();
+    });
+  },
 
   resetData(){
-    this.tmHeat.fill(0); this.opHeat.fill(0);
-    this.opMarkPref = Array.from({length:7},()=>new Float32Array(7).fill(0));
-    this.tmPredAcc = this.opPredAcc = this.rounds = 0; this.eps = 0.45;
+    this.tmHeat.fill(0);
+    this.opHeat.fill(0);
+    this.opMarkPref = Array.from({length:7}, () => new Float32Array(7).fill(0));
+    this.tmPredAcc = 0;
+    this.opPredAcc = 0;
+    this.eps = 0.45;
+    this.rounds = 0;
     this._recompute();
-    try{localStorage.removeItem('gk_brain_v3');}catch(e){}
+    try { localStorage.removeItem('gk_brain_v3'); } catch(e){}
     updateLearnBadge();
   }
 };
@@ -1172,14 +1219,14 @@ function advParticles(){
 }
 
 function updateLearnBadge(){
-  const r=Brain.rounds;
-  const lvl=r<5?'初心者':r<20?'学習中':r<50?'上達中':r<100?'熟練':r<200?'エキスパート':'マスター';
-  const explPct=Math.round((Brain.eps/EPS0)*100);
-  const tmP=Math.round(Brain.tmPredAcc*100), opP=Math.round(Brain.opPredAcc*100);
-  const expBar='█'.repeat(Math.min(10,Math.floor(r/5)))+' '.repeat(Math.max(0,10-Math.floor(r/5)));
-  const el=document.getElementById('learn-badge');
-  if(el) el.textContent=
-    `🧠 ${lvl}(${r}戦) 探索率${explPct}%↓ 予測:味${tmP}%敵${opP}%`;
+  const r = Brain.rounds;
+  const lvl = r<5 ? '初心者' : r<20 ? '学習中' : r<50 ? '上達中' : r<100 ? '熟練' : r<200 ? 'エキスパート' : 'マスター';
+  const explPct = Math.round((Brain.eps / Brain.EPS0) * 100);
+  const tmP = Math.round(Brain.tmPredAcc * 100);
+  const opP = Math.round(Brain.opPredAcc * 100);
+
+  const el = document.getElementById('learn-badge');
+  if(el) el.textContent = `🧠 ${lvl}(${r}戦) 探索率${explPct}%↓ 予測:味${tmP}%敵${opP}%`;
 }
 
 // ── Round end / UI (unchanged) ───────────────────────────────
