@@ -180,7 +180,8 @@ let G = {
 // ====================== AI v3 ======================
 const GRID_X=15, GRID_Y=20, HEAT_SIZE=GRID_X*GRID_Y;
 const hIdx = (mx,my) => Math.min(GRID_X-1, Math.floor(mx/(FW/GRID_X))) * GRID_Y + Math.min(GRID_Y-1, Math.floor(my/(FH/GRID_Y)));
-
+const EPS0     = 0.42;
+  
 const Brain = {
   tmHeat: new Float32Array(HEAT_SIZE).fill(0),
   opHeat: new Float32Array(HEAT_SIZE).fill(0),
