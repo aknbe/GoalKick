@@ -39,14 +39,16 @@ canvas{display:block;width:100%;}
 .leg{display:flex;align-items:center;gap:4px;}
 .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
 #overlay{display:none;position:absolute;left:50%;transform:translateX(-50%);
-  z-index:200;align-items:flex-start;justify-content:center;width:80%;pointer-events:auto;}
+  z-index:200;align-items:flex-start;justify-content:center;width:82%;pointer-events:auto;}
 #overlay.show{display:flex;}
-.ov-box{background:rgba(8,20,14,0.93);border:2.5px solid var(--cyan);border-radius:12px;
-  padding:12px 18px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.55);
-  width:100%;backdrop-filter:blur(3px);}
-.ov-box.success{border-color:#00e5c8;box-shadow:0 0 20px rgba(0,229,200,.35);}
-.ov-box.failure{border-color:#ff4545;box-shadow:0 0 20px rgba(255,69,69,.35);}
-.ov-box.partial{border-color:#f7d44c;box-shadow:0 0 20px rgba(247,212,76,.30);}
+.ov-box{background:rgba(4,14,8,0.72);border:2.5px solid var(--cyan);border-radius:12px;
+  padding:12px 18px;text-align:center;
+  box-shadow:0 4px 24px rgba(0,0,0,.45);
+  width:100%;backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);}
+.ov-box.success{border-color:#00e5c8;box-shadow:0 0 20px rgba(0,229,200,.30);}
+.ov-box.failure{border-color:#ff4545;box-shadow:0 0 20px rgba(255,69,69,.28);}
+.ov-box.partial{border-color:#f7d44c;box-shadow:0 0 20px rgba(247,212,76,.25);}
 .ov-icon{font-size:1.6rem;margin-bottom:2px;}
 .ov-title{font-family:'Orbitron',sans-serif;font-size:.92rem;margin-bottom:2px;}
 .ov-pts{font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--gold);margin-bottom:4px;}
@@ -465,8 +467,19 @@ function checkBall(){
   for(let oi=0;oi<G.opponents.length;oi++){
     const op=G.opponents[oi];
     if(Math.hypot(bx-op.mx,by-op.my)<R_OP_INTERCEPT){
+      // Check approach angle: opponent must come from the side, not from behind ball
+      // Ball travel direction
+      const ballAng=Math.atan2(G.ball.vmy,G.ball.vmx);
+      // Direction from opponent to ball
+      const opToBallAng=Math.atan2(by-op.my,bx-op.mx);
+      let relAng=opToBallAng-ballAng;
+      while(relAng>Math.PI) relAng-=Math.PI*2;
+      while(relAng<-Math.PI) relAng+=Math.PI*2;
+      // If opponent is chasing from directly behind (same direction as ball, |relAng|<100°),
+      // they can't intercept — must approach from ≥100° off the ball's travel direction
+      if(Math.abs(relAng)<1.75) continue; // behind ball → no intercept
+
       burstM(bx,by,'#ff4545');
-      // 【2】 Find nearest teammate to record mark preference
       let nearTM=-1,nearD=Infinity;
       G.teammates.forEach((tm,ti)=>{const d=Math.hypot(tm.mx-op.mx,tm.my-op.my);if(d<nearD){nearD=d;nearTM=ti;}});
       Brain.onBallIntercepted(oi,nearTM);
@@ -614,18 +627,33 @@ function updateTeammates(){
 }
 function clampTM(tm, idx){
   tm.mx=clamp(tm.mx,.5,FW-.5);
-  // All teammates stay above y=5m minimum
   tm.my=clamp(tm.my,5.1,FH-.5);
-  // Only tm[0] allowed in own PA
-  if(idx !== 0 && tm.my < OWN_PA+0.5){
-    tm.my = OWN_PA+0.5;
-  }
-  // Offside line: soft prevention — push back only 70% of frames, 2m margin
-  // This means players sometimes drift slightly into offside (realistic)
+  if(idx !== 0 && tm.my < OWN_PA+0.5) tm.my = OWN_PA+0.5;
+  // Offside line soft prevention
   if(G._offsideLine!=null && G._offsideLine>HALF && Math.random()<0.70){
     const maxY = G._offsideLine - 2.0;
     if(tm.my > maxY) tm.my = maxY;
   }
+  // Rear exclusion zone: push out any other teammate within 0.7m in rear ±60°
+  const REAR_R=0.7, REAR_ANG=Math.PI/3; // 60°
+  const myFacing=tm.wAngle??Math.PI/2;
+  const rearDir=myFacing+Math.PI; // rear direction
+  G.teammates.forEach(tm2=>{
+    if(tm2===tm) return;
+    const dx=tm2.mx-tm.mx, dy=tm2.my-tm.my;
+    const d=Math.sqrt(dx*dx+dy*dy)||1;
+    if(d>REAR_R) return;
+    // Angle from tm to tm2
+    const ang=Math.atan2(dy,dx);
+    let diff=ang-rearDir;
+    while(diff>Math.PI) diff-=Math.PI*2;
+    while(diff<-Math.PI) diff+=Math.PI*2;
+    if(Math.abs(diff)<REAR_ANG){
+      // Push tm2 out of rear zone
+      const push=(REAR_R-d+0.1);
+      tm2.mx+=(dx/d)*push; tm2.my+=(dy/d)*push;
+    }
+  });
 }
 
 // ── Opponents (meters) ───────────────────────────────────────
@@ -685,12 +713,51 @@ function updateOpponents(){
       }
       const dx=tx-op.mx,dy=ty-op.my,d=Math.sqrt(dx*dx+dy*dy)||1;
       const mult=G.phase==='dribble'?OP_DRIB_MULT:OP_PRESS_MULT;
-      op.mx+=(dx/d)*op.spd*mult+sepx*.4;
-      op.my+=(dy/d)*op.spd*mult+sepy*.4;
+      op._moveAng=Math.atan2(dy,dx); // record for direction display
+
+      // ── Lateral offset: don't chase straight from behind ──
+      // If opponent is directly behind target (within ±20°), offset to the side
+      // so they must overtake to make a play — can't strip the ball from behind.
+      let offx=0, offy=0;
+      if(G.phase==='dribble' && G.ballHolder!==null){
+        const h=G.teammates[G.ballHolder];
+        const toTarget=Math.atan2(h.my-op.my, h.mx-op.mx); // direction op→holder
+        const holderFacing=h._dribAngle??Math.PI/2;         // holder's movement direction
+        // Angle between op's approach and holder's forward direction
+        let behindAng=toTarget-holderFacing;
+        while(behindAng>Math.PI) behindAng-=Math.PI*2;
+        while(behindAng<-Math.PI) behindAng+=Math.PI*2;
+        // If approaching from directly behind (|angle| < 25°), add lateral offset
+        if(Math.abs(behindAng)<0.44){
+          const side=(op.mx<h.mx)?1:-1; // go to the open side
+          offx=side*mps(3.5);
+        }
+      }
+
+      op.mx+=(dx/d)*op.spd*mult+sepx*.4+offx;
+      op.my+=(dy/d)*op.spd*mult+sepy*.4+offy;
     }
     op.mx=clamp(op.mx,.5,FW-.5);
     op.my=clamp(op.my,.5,FH-.5);
-    if(op.my<OWN_PA+.9) op.my=OWN_PA+.9; // never in own PA
+    if(op.my<OWN_PA+.9) op.my=OWN_PA+.9;
+    // Rear exclusion zone for opponents (0.7m, ±60° behind)
+    const REAR_R=0.7, REAR_ANG=Math.PI/3;
+    const myFacing2=op._moveAng??op.pAngle??0;
+    const rearDir2=myFacing2+Math.PI;
+    G.opponents.forEach(op2=>{
+      if(op2===op) return;
+      const dx=op2.mx-op.mx, dy=op2.my-op.my;
+      const d=Math.sqrt(dx*dx+dy*dy)||1;
+      if(d>REAR_R) return;
+      const ang=Math.atan2(dy,dx);
+      let diff=ang-rearDir2;
+      while(diff>Math.PI) diff-=Math.PI*2;
+      while(diff<-Math.PI) diff+=Math.PI*2;
+      if(Math.abs(diff)<REAR_ANG){
+        const push=(REAR_R-d+0.1);
+        op2.mx+=(dx/d)*push; op2.my+=(dy/d)*push;
+      }
+    });
   });
 }
 
@@ -809,10 +876,30 @@ function updateDribble(){
   }
 
   // ── Tackle check ────────────────────────────────────────────
+  // Only opponents approaching from the side can tackle (not from directly behind)
   if(closestOppD<R_OP_TACKLE){
-    burstM(h.mx,h.my,'#ff4545');
-    if(Math.random()<.45){setBanner('<span class="w">タックル！</span>かわした！');return;}
-    doEnd(false,'タックルされた！でもナイスチャレンジ！');return;
+    // Find the closest opponent
+    let closestOp=null;
+    G.opponents.forEach(op=>{
+      const d=Math.hypot(h.mx-op.mx,h.my-op.my);
+      if(d===closestOppD) closestOp=op;
+    });
+    // Check if opponent is approaching from behind
+    const holderFacing=h._dribAngle??Math.PI/2;
+    let canTackle=true;
+    if(closestOp){
+      const opToHolder=Math.atan2(h.my-closestOp.my,h.mx-closestOp.mx);
+      let relAng=opToHolder-holderFacing;
+      while(relAng>Math.PI) relAng-=Math.PI*2;
+      while(relAng<-Math.PI) relAng+=Math.PI*2;
+      // Behind = opponent is in same direction as holder's movement (|relAng| < 100°)
+      if(Math.abs(relAng)<1.75) canTackle=false; // from behind → can't tackle
+    }
+    if(canTackle){
+      burstM(h.mx,h.my,'#ff4545');
+      if(Math.random()<.45){setBanner('<span class="w">タックル！</span>かわした！');return;}
+      doEnd(false,'タックルされた！でもナイスチャレンジ！');return;
+    }
   }
 
   // ── Dribble direction: forward + strong opponent avoidance ─
@@ -1085,52 +1172,75 @@ function drawTrailGfx(){
   });
 }
 
+// Draw direction arrow from center at given angle
+function drawDir(bpx,bpy,ang,r,col){
+  const fx=Math.cos(ang),fy=Math.sin(ang); // note: canvas y is flipped vs game y
+  const tx=bpx+fx*(r+4), ty=bpy-fy*(r+4); // subtract fy because canvas y=down
+  const lx=bpx+fx*r, ly=bpy-fy*r;
+  ctx.beginPath();
+  ctx.moveTo(tx,ty);
+  ctx.lineTo(lx+Math.cos(ang+Math.PI/2)*3, ly-Math.sin(ang+Math.PI/2)*3);
+  ctx.lineTo(lx-Math.cos(ang+Math.PI/2)*3, ly+Math.sin(ang+Math.PI/2)*3);
+  ctx.closePath();
+  ctx.fillStyle=col;ctx.fill();
+}
+
 function drawTeammates(){
+  const R=7.7; // 70% of original 11px
   G.teammates.forEach((tm,i)=>{
     const bpx=px(tm.mx),bpy=py(tm.my),ph=tm.my>HALF,hld=i===G.ballHolder;
     pShadow(bpx,bpy);
-    if(ph||hld){ctx.beginPath();ctx.arc(bpx,bpy,15,0,Math.PI*2);
+    if(ph||hld){ctx.beginPath();ctx.arc(bpx,bpy,R+5,0,Math.PI*2);
       ctx.fillStyle=hld?'rgba(247,212,76,.17)':'rgba(0,229,200,.10)';ctx.fill();}
-    ctx.beginPath();ctx.arc(bpx,bpy,11,0,Math.PI*2);ctx.fillStyle='#2466b8';ctx.fill();
-    ctx.strokeStyle=hld?'#f7d44c':ph?'#00e5c8':'#5ea8ff';ctx.lineWidth=hld?2.5:1.8;ctx.stroke();
-    pLabel(bpx,bpy,tm.num,'#fff');
+    ctx.beginPath();ctx.arc(bpx,bpy,R,0,Math.PI*2);ctx.fillStyle='#2466b8';ctx.fill();
+    ctx.strokeStyle=hld?'#f7d44c':ph?'#00e5c8':'#5ea8ff';ctx.lineWidth=hld?2.2:1.6;ctx.stroke();
+    pLabel(bpx,bpy,tm.num,'#fff',7);
+    // Direction indicator
+    const ang=hld?(tm._dribAngle??Math.PI/2):(tm.wAngle??Math.PI/2);
+    drawDir(bpx,bpy,ang,R,hld?'#f7d44c':'rgba(255,255,255,.75)');
+    // Labels
     if((G.phase==='aim'||G.phase==='place'||G.phase==='flying'||G.phase==='loose'||G.phase==='pass')&&ph&&!hld){
-      ctx.fillStyle='rgba(0,229,204,.80)';ctx.font='bold 7px Zen Kaku Gothic New';
-      ctx.textAlign='center';ctx.fillText('フリー',bpx,bpy-16);ctx.textAlign='left';
+      ctx.fillStyle='rgba(0,229,204,.80)';ctx.font='bold 6px Zen Kaku Gothic New';
+      ctx.textAlign='center';ctx.fillText('フリー',bpx,bpy-R-5);ctx.textAlign='left';
     }
-    if(hld){ctx.fillStyle='rgba(247,212,76,.88)';ctx.font='bold 7px Zen Kaku Gothic New';
-      ctx.textAlign='center';ctx.fillText('▶DRIB',bpx,bpy-16);ctx.textAlign='left';}
-    // Offside flag indicator
+    if(hld){ctx.fillStyle='rgba(247,212,76,.88)';ctx.font='bold 6px Zen Kaku Gothic New';
+      ctx.textAlign='center';ctx.fillText('▶DRIB',bpx,bpy-R-5);ctx.textAlign='left';}
     if(tm._offside&&(G.phase==='flying'||G.phase==='pass')){
-      ctx.fillStyle='rgba(255,170,0,.90)';ctx.font='bold 7px Zen Kaku Gothic New';
-      ctx.textAlign='center';ctx.fillText('⚠️OFF',bpx,bpy+22);ctx.textAlign='left';
+      ctx.fillStyle='rgba(255,170,0,.90)';ctx.font='bold 6px Zen Kaku Gothic New';
+      ctx.textAlign='center';ctx.fillText('⚠️OFF',bpx,bpy+R+8);ctx.textAlign='left';
     }
   });
 }
 
 function drawOpponents(){
-  G.opponents.forEach(op=>{
+  const R=7.7;
+  G.opponents.forEach((op,i)=>{
     const bpx=px(op.mx),bpy=py(op.my);pShadow(bpx,bpy);
-    ctx.beginPath();ctx.arc(bpx,bpy,11,0,Math.PI*2);ctx.fillStyle='#a81818';ctx.fill();
-    ctx.strokeStyle='#ff7070';ctx.lineWidth=1.8;ctx.stroke();pLabel(bpx,bpy,'D','#fff');
+    ctx.beginPath();ctx.arc(bpx,bpy,R,0,Math.PI*2);ctx.fillStyle='#a81818';ctx.fill();
+    ctx.strokeStyle='#ff7070';ctx.lineWidth=1.6;ctx.stroke();pLabel(bpx,bpy,'D','#fff',7);
+    // Direction: toward current target (use pAngle as fallback)
+    const ang=op._moveAng??op.pAngle??0;
+    drawDir(bpx,bpy,ang,R,'rgba(255,160,160,.80)');
   });
 }
 
 function drawOppGK(){
   const bpx=px(OPP_GK.mx), bpy=py(OPP_GK.my);
   pShadow(bpx,bpy);
-  ctx.beginPath();ctx.arc(bpx,bpy,16,0,Math.PI*2);
+  ctx.beginPath();ctx.arc(bpx,bpy,11.2,0,Math.PI*2);
   ctx.fillStyle='rgba(255,69,69,.08)';ctx.fill();
-  ctx.beginPath();ctx.arc(bpx,bpy,13,0,Math.PI*2);
+  ctx.beginPath();ctx.arc(bpx,bpy,9.1,0,Math.PI*2);
   ctx.fillStyle='#881010';ctx.fill();
-  ctx.strokeStyle='#ff4545';ctx.lineWidth=2.2;ctx.stroke();
-  pLabel(bpx,bpy,'GK','#fff',8);
+  ctx.strokeStyle='#ff4545';ctx.lineWidth=1.8;ctx.stroke();
+  pLabel(bpx,bpy,'GK','#fff',7);
 }
 function drawGK(){
   const bpx=px(G.gk.mx),bpy=py(G.gk.my);pShadow(bpx,bpy);
-  ctx.beginPath();ctx.arc(bpx,bpy,16,0,Math.PI*2);ctx.fillStyle='rgba(0,229,200,.08)';ctx.fill();
-  ctx.beginPath();ctx.arc(bpx,bpy,13,0,Math.PI*2);ctx.fillStyle='#009976';ctx.fill();
-  ctx.strokeStyle='#00e5c8';ctx.lineWidth=2.2;ctx.stroke();pLabel(bpx,bpy,'GK','#fff',8);
+  ctx.beginPath();ctx.arc(bpx,bpy,11.2,0,Math.PI*2);ctx.fillStyle='rgba(0,229,200,.08)';ctx.fill();
+  ctx.beginPath();ctx.arc(bpx,bpy,9.1,0,Math.PI*2);ctx.fillStyle='#009976';ctx.fill();
+  ctx.strokeStyle='#00e5c8';ctx.lineWidth=1.8;ctx.stroke();pLabel(bpx,bpy,'GK','#fff',7);
+  // GK faces upfield
+  drawDir(bpx,bpy,Math.PI/2,9.1,'rgba(0,229,200,.85)');
 }
 
 function drawBall(){
@@ -1428,15 +1538,16 @@ function doEnd(success,msg,pts=0,halfline){
   Brain.onRoundEnd(halfline===undefined?success:halfline, pts);
   const full=halfline===undefined?success:halfline;updateScore();
 
-  // Position overlay above ball stop point
+  // Position overlay above ball on screen, shifted 10m upward
   const ov=document.getElementById('overlay');
   const fw=document.getElementById('field-wrap');
-  // ball canvas y ratio (0=top of canvas, 1=bottom)
-  const ballCanvasY=(PAD+(FH-G.ball.my)*SC)/CH;
-  // place overlay above ball, clamped so it stays visible
   const wrapH=fw.offsetHeight||400;
-  const boxH=120; // approx overlay height px
-  const topPx=clamp(ballCanvasY*wrapH - boxH - 12, 6, wrapH - boxH - 6);
+  // Ball pixel position in displayed canvas (0=top, wrapH=bottom)
+  const ballPxInCanvas=(PAD+(FH-G.ball.my)*SC)/CH * wrapH;
+  // Extra 10m upward shift in canvas pixels
+  const tenMeterShift=(10*SC)/CH * wrapH;
+  const boxH=ov.offsetHeight||130;
+  const topPx=clamp(ballPxInCanvas - boxH - 20 - tenMeterShift, 6, wrapH - boxH - 6);
   ov.style.top=Math.round(topPx)+'px';
 
   const box=document.getElementById('ov-box');
