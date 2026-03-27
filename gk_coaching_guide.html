@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ゴールキーパー指導ガイド｜小学生初心者向け</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Oswald:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1a6b2f;
+    --green-light: #2d9e4f;
+    --green-pale: #e8f5ec;
+    --yellow: #f5c518;
+    --yellow-light: #fff8dc;
+    --white: #ffffff;
+    --dark: #111;
+    --gray: #555;
+    --gray-light: #f0f0f0;
+    --accent: #e63946;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: #f4f8f5;
+    color: var(--dark);
+    line-height: 1.7;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, var(--green) 0%, #0d4a20 100%);
+    color: white;
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: -60px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; right: -40px;
+    width: 250px; height: 250px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .hero-badge {
+    display: inline-block;
+    background: var(--yellow);
+    color: var(--dark);
+    font-weight: 900;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+  .hero h1 {
+    font-family: 'Oswald', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .hero p {
+    font-size: 1rem;
+    opacity: 0.85;
+  }
+
+  /* LAYOUT */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 56px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 3px solid var(--green);
+  }
+  .section-num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 2rem;
+    color: var(--green);
+    line-height: 1;
+    min-width: 40px;
+  }
+  .section-title {
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: var(--green);
+  }
+
+  /* ILLUSTRATION BOX */
+  .illus-box {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    padding: 28px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .illus-box svg {
+    max-width: 100%;
+    height: auto;
+  }
+  .illus-caption {
+    font-size: 0.85rem;
+    color: var(--gray);
+    text-align: center;
+    margin-top: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  /* TEXT CONTENT */
+  .content-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .content-card h3 {
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--green);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .content-card h3::before {
+    content: '';
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--yellow);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .content-card p, .content-card ul {
+    font-size: 0.93rem;
+    color: #333;
+  }
+  .content-card ul {
+    padding-left: 1.2em;
+  }
+  .content-card ul li {
+    margin-bottom: 4px;
+  }
+
+  /* KEY POINT BOX */
+  .key-point {
+    background: var(--yellow-light);
+    border-left: 5px solid var(--yellow);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 20px;
+    margin-top: 16px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--dark);
+  }
+  .key-point::before {
+    content: '⭐ ポイント：';
+    color: var(--green);
+  }
+
+  /* NG BOX */
+  .ng-box {
+    background: #fff5f5;
+    border-left: 5px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 20px;
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: #c0392b;
+    font-weight: 700;
+  }
+  .ng-box::before {
+    content: '❌ NG：';
+  }
+
+  /* TABLE */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    margin-top: 12px;
+  }
+  th {
+    background: var(--green);
+    color: white;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 700;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  tr:nth-child(even) td { background: var(--green-pale); }
+
+  /* RULE LIST */
+  .rule-list {
+    counter-reset: rule;
+    list-style: none;
+    padding: 0;
+  }
+  .rule-list li {
+    counter-increment: rule;
+    padding: 12px 16px 12px 52px;
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    position: relative;
+    font-size: 0.93rem;
+  }
+  .rule-list li::before {
+    content: counter(rule);
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--green);
+    color: white;
+    font-weight: 900;
+    font-family: 'Oswald', sans-serif;
+    font-size: 1rem;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .rule-list li strong {
+    color: var(--green);
+    display: block;
+    font-weight: 900;
+    margin-bottom: 2px;
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 30px;
+    font-size: 0.8rem;
+    color: #999;
+    background: var(--dark);
+    color: #aaa;
+  }
+
+  /* STEP FLOW */
+  .step-flow {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    flex-wrap: wrap;
+    margin: 16px 0;
+  }
+  .step-item {
+    flex: 1;
+    min-width: 120px;
+    background: var(--green-pale);
+    padding: 14px 10px;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--green);
+    position: relative;
+    border-top: 3px solid var(--green);
+  }
+  .step-item:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--green);
+    font-size: 1.2rem;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">初心者向け指導ガイド</div>
+  <h1>⚽ ゴールキーパー<br>コーチングマニュアル</h1>
+  <p>小学生（6〜8歳）の初心者GKに教えること</p>
+</div>
+
+<div class="container">
+
+  <!-- ========== SECTION 1: ルール ========== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <div class="section-title">まず覚えるべきルール</div>
+    </div>
+
+    <!-- フィールド図 -->
+    <div class="illus-box">
+      <svg viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg" width="700">
+        <!-- 芝 -->
+        <rect width="700" height="420" fill="#3a9e5f"/>
+        <rect width="700" height="420" fill="url(#grass)"/>
+        <defs>
+          <pattern id="grass" width="40" height="40" patternUnits="userSpaceOnUse">
+            <rect width="40" height="20" fill="#3a9e5f"/>
+            <rect y="20" width="40" height="20" fill="#35915a"/>
+          </pattern>
+        </defs>
+        <!-- フィールドライン -->
+        <rect x="30" y="20" width="640" height="380" fill="none" stroke="white" stroke-width="3"/>
+        <!-- ハーフウェイライン -->
+        <line x1="350" y1="20" x2="350" y2="400" stroke="white" stroke-width="2"/>
+        <!-- センターサークル -->
+        <circle cx="350" cy="210" r="55" fill="none" stroke="white" stroke-width="2"/>
+        <circle cx="350" cy="210" r="4" fill="white"/>
+
+        <!-- 左ペナルティエリア -->
+        <rect x="30" y="120" width="130" height="180" fill="rgba(255,255,255,0.08)" stroke="white" stroke-width="2"/>
+        <!-- 左ゴールエリア -->
+        <rect x="30" y="158" width="55" height="104" fill="rgba(255,255,255,0.1)" stroke="white" stroke-width="2"/>
+        <!-- 左ゴール -->
+        <rect x="10" y="172" width="20" height="76" fill="none" stroke="white" stroke-width="3"/>
+        <rect x="10" y="172" width="20" height="76" fill="rgba(255,255,255,0.15)"/>
+
+        <!-- 右ペナルティエリア -->
+        <rect x="540" y="120" width="130" height="180" fill="rgba(255,255,255,0.08)" stroke="white" stroke-width="2"/>
+        <!-- 右ゴールエリア -->
+        <rect x="615" y="158" width="55" height="104" fill="rgba(255,255,255,0.1)" stroke="white" stroke-width="2"/>
+        <!-- 右ゴール -->
+        <rect x="670" y="172" width="20" height="76" fill="none" stroke="white" stroke-width="3"/>
+        <rect x="670" y="172" width="20" height="76" fill="rgba(255,255,255,0.15)"/>
+
+        <!-- ペナルティスポット -->
+        <circle cx="95" cy="210" r="3" fill="white"/>
+        <circle cx="605" cy="210" r="3" fill="white"/>
+
+        <!-- ラベル -->
+        <text x="95" y="108" text-anchor="middle" fill="#ffe066" font-size="12" font-weight="bold" font-family="sans-serif">ペナルティエリア</text>
+        <text x="95" y="122" text-anchor="middle" fill="#ffe066" font-size="11" font-family="sans-serif">（手が使えるエリア）</text>
+        <text x="350" y="50" text-anchor="middle" fill="white" font-size="12" font-weight="bold" font-family="sans-serif">ハーフウェーライン</text>
+        <text x="22" y="165" text-anchor="middle" fill="white" font-size="11" font-family="sans-serif" transform="rotate(-90,22,210)">ゴール</text>
+
+        <!-- GK図 (左) -->
+        <!-- 頭 -->
+        <circle cx="75" cy="195" r="10" fill="#f5c09a" stroke="#333" stroke-width="1.5"/>
+        <!-- グローブ -->
+        <rect x="63" y="200" width="8" height="6" rx="2" fill="#f5c518"/>
+        <rect x="79" y="200" width="8" height="6" rx="2" fill="#f5c518"/>
+        <!-- 体 -->
+        <rect x="68" y="206" width="14" height="18" rx="3" fill="#e63946"/>
+        <!-- 足 -->
+        <line x1="72" y1="224" x2="69" y2="240" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+        <line x1="76" y1="224" x2="79" y2="240" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="69" cy="241" rx="5" ry="3" fill="#333"/>
+        <ellipse cx="79" cy="241" rx="5" ry="3" fill="#333"/>
+        <text x="75" y="258" text-anchor="middle" fill="#ffe066" font-size="11" font-weight="bold" font-family="sans-serif">GK</text>
+      </svg>
+      <div class="illus-caption">フィールド全体図 ── ペナルティエリア内だけ手が使える</div>
+    </div>
+
+    <ul class="rule-list">
+      <li>
+        <strong>手が使えるエリア</strong>
+        ペナルティエリアの中だけ手が使える。ラインを踏んでいればOK。エリアの外ではフィールドプレーヤーと同じ。
+      </li>
+      <li>
+        <strong>ボールを持っていられる時間</strong>
+        手でボールを持ったら6秒以内に手放す。長く持ちすぎると相手の間接FKになる。
+      </li>
+      <li>
+        <strong>バックパスのルール</strong>
+        味方が足でわざと蹴って戻したボールは手で触れない。頭・むね・ひざはOK。違反すると間接FK。
+      </li>
+      <li>
+        <strong>ゴールキック／コーナーキック</strong>
+        ボールがゴールラインを割ったとき、最後に攻撃側が触った→ゴールキック（GKが蹴る）、守備側が触った→コーナーキック（相手が蹴る）。
+      </li>
+      <li>
+        <strong>ペナルティキック（PK）</strong>
+        エリア内で守備側が反則するとPK。GKはキッカーが蹴るまでゴールライン上にいること。
+      </li>
+    </ul>
+    <div class="key-point">最初はルールをざっと伝えるだけでOK。練習中にその場で「今のはバックパスだよ」と教える方が頭に入りやすい。</div>
+  </div>
+
+  <!-- ========== SECTION 2: 基本姿勢 ========== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <div class="section-title">基本姿勢（構え）</div>
+    </div>
+
+    <div class="illus-box">
+      <svg viewBox="0 0 340 320" xmlns="http://www.w3.org/2000/svg" width="340">
+        <rect width="340" height="320" fill="#f0f8f2"/>
+        <!-- 地面 -->
+        <rect x="0" y="280" width="340" height="40" fill="#4a8c3f" opacity="0.3"/>
+        <line x1="0" y1="280" x2="340" y2="280" stroke="#4a8c3f" stroke-width="2"/>
+
+        <!-- GK 基本姿勢 -->
+        <!-- 頭 -->
+        <circle cx="170" cy="80" r="22" fill="#f5c09a" stroke="#5a3e28" stroke-width="2"/>
+        <!-- 目 -->
+        <circle cx="163" cy="78" r="3" fill="#333"/>
+        <circle cx="177" cy="78" r="3" fill="#333"/>
+        <!-- 口 -->
+        <path d="M164 88 Q170 93 176 88" stroke="#333" stroke-width="1.5" fill="none"/>
+        <!-- 髪 -->
+        <path d="M150 72 Q160 55 170 58 Q180 55 190 72" fill="#5a3e28"/>
+
+        <!-- 首 -->
+        <rect x="164" y="102" width="12" height="12" fill="#f5c09a"/>
+
+        <!-- 左腕 -->
+        <path d="M140 118 L108 150 L112 158 L145 128" fill="#f5c09a" stroke="#d4956a" stroke-width="1"/>
+        <!-- 左グローブ -->
+        <ellipse cx="106" cy="155" rx="12" ry="9" fill="#f5c518" stroke="#d4a017" stroke-width="1.5"/>
+        <line x1="100" y1="152" x2="96" y2="148" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/>
+        <line x1="104" y1="150" x2="101" y2="145" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/>
+        <line x1="109" y1="149" x2="108" y2="143" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/>
+        <line x1="114" y1="150" x2="115" y2="144" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/>
+
+        <!-- 右腕 -->
+        <path d="M200 118 L232 150 L228 158 L195 128" fill="#f5c09a" stroke="#d4956a" stroke-width="1"/>
+        <!-- 右グローブ -->
+        <ellipse cx="234" cy="155" rx="12" ry="9" fill="#f5c518" stroke="#d4a017" stroke-width="1.5"/>
+        <line x1="240" y1="152" x2="244" y2="148" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/>
+        <line x1="236" y1="150" x2="239" y2="145" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/>
+        <line x1="231" y1="149" x2="232" y2="143" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/>
+        <line x1="226" y1="150" x2="225" y2="144" stroke="#d4a017" stroke-width="2" stroke-linecap="round"/>
+
+        <!-- 胴体（ユニフォーム） -->
+        <path d="M140 114 L200 114 L205 190 L135 190 Z" fill="#e63946"/>
+        <!-- ユニフォーム番号 -->
+        <text x="170" y="160" text-anchor="middle" fill="white" font-size="20" font-weight="bold" font-family="sans-serif">1</text>
+
+        <!-- 左脚 -->
+        <path d="M148 225 L140 278" stroke="#f5c09a" stroke-width="14" stroke-linecap="round"/>
+        <!-- 右脚 -->
+        <path d="M192 225 L200 278" stroke="#f5c09a" stroke-width="14" stroke-linecap="round"/>
+        <!-- ショーツ -->
+        <path d="M142 190 L135 225 L170 225 L170 190 Z" fill="#111"/>
+        <path d="M198 190 L205 225 L170 225 L170 190 Z" fill="#111"/>
+        <!-- 靴 -->
+        <ellipse cx="136" cy="279" rx="16" ry="7" fill="#222"/>
+        <ellipse cx="204" cy="279" rx="16" ry="7" fill="#222"/>
+
+        <!-- アノテーション矢印と注釈 -->
+        <!-- 手を前に -->
+        <line x1="95" y1="145" x2="60" y2="130" stroke="#e63946" stroke-width="1.5" stroke-dasharray="4"/>
+        <text x="8" y="120" fill="#e63946" font-size="11" font-weight="bold" font-family="sans-serif">手を前に</text>
+        <text x="8" y="133" fill="#e63946" font-size="11" font-family="sans-serif">広げる</text>
+
+        <line x1="245" y1="145" x2="280" y2="130" stroke="#e63946" stroke-width="1.5" stroke-dasharray="4"/>
+        <text x="282" y="120" fill="#e63946" font-size="11" font-weight="bold" font-family="sans-serif">指を広げ</text>
+        <text x="282" y="133" fill="#e63946" font-size="11" font-family="sans-serif">手のひら前</text>
+
+        <!-- 膝を曲げる -->
+        <line x1="140" y1="250" x2="90" y2="250" stroke="#1a6b2f" stroke-width="1.5" stroke-dasharray="4"/>
+        <text x="10" y="245" fill="#1a6b2f" font-size="11" font-weight="bold" font-family="sans-serif">膝を曲げる</text>
+        <text x="10" y="258" fill="#1a6b2f" font-size="11" font-family="sans-serif">重心を低く</text>
+
+        <!-- つま先 -->
+        <line x1="204" y1="278" x2="250" y2="265" stroke="#1a6b2f" stroke-width="1.5" stroke-dasharray="4"/>
+        <text x="252" y="255" fill="#1a6b2f" font-size="11" font-weight="bold" font-family="sans-serif">つま先重心</text>
+        <text x="252" y="268" fill="#1a6b2f" font-size="11" font-family="sans-serif">かかと浮かせ</text>
+
+        <!-- 前傾 -->
+        <line x1="170" y1="114" x2="290" y2="80" stroke="#555" stroke-width="1.5" stroke-dasharray="4"/>
+        <text x="292" y="72" fill="#555" font-size="11" font-weight="bold" font-family="sans-serif">前傾姿勢</text>
+        <text x="292" y="85" fill="#555" font-size="11" font-family="sans-serif">ボールを見る</text>
+      </svg>
+      <div class="illus-caption">基本構え ── すべてのプレーの土台</div>
+    </div>
+
+    <div class="content-card">
+      <h3>足の構え</h3>
+      <ul>
+        <li>足を肩幅よりやや広めに開く</li>
+        <li>膝をしっかり曲げる（浅すぎない）</li>
+        <li>つま先重心、かかとは軽く浮かせる</li>
+        <li>つま先はやや外向きに</li>
+      </ul>
+    </div>
+    <div class="content-card">
+      <h3>手・腕の構え</h3>
+      <ul>
+        <li>両手を体の前方20〜30cmに出す</li>
+        <li>左右に少し開いて斜め前に（左右反応しやすい）</li>
+        <li>手のひらを相手に向け、指を広げる</li>
+        <li>肘は軽く曲げた状態でリラックス</li>
+      </ul>
+    </div>
+    <div class="key-point">「大きなハンドルを前に持つイメージ」で手の位置を教えると小学生にわかりやすい。</div>
+  </div>
+
+  <!-- ========== SECTION 3: キャッチング ========== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <div class="section-title">キャッチング</div>
+    </div>
+
+    <div class="illus-box">
+      <svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg" width="700">
+        <rect width="700" height="280" fill="#f0f8f2"/>
+        <rect x="0" y="250" width="700" height="30" fill="#4a8c3f" opacity="0.25"/>
+        <line x1="0" y1="250" x2="700" y2="250" stroke="#4a8c3f" stroke-width="1.5"/>
+
+        <!-- タイトル -->
+        <text x="117" y="22" text-anchor="middle" fill="#1a6b2f" font-size="13" font-weight="bold" font-family="sans-serif">① バスケットキャッチ</text>
+        <text x="117" y="36" text-anchor="middle" fill="#555" font-size="11" font-family="sans-serif">（胸の高さ）</text>
+
+        <text x="350" y="22" text-anchor="middle" fill="#1a6b2f" font-size="13" font-weight="bold" font-family="sans-serif">② スクープキャッチ</text>
+        <text x="350" y="36" text-anchor="middle" fill="#555" font-size="11" font-family="sans-serif">（腰より下・地面付近）</text>
+
+        <text x="583" y="22" text-anchor="middle" fill="#1a6b2f" font-size="13" font-weight="bold" font-family="sans-serif">③ オーバーハンドキャッチ</text>
+        <text x="583" y="36" text-anchor="middle" fill="#555" font-size="11" font-family="sans-serif">（顔より上）</text>
+
+        <!-- 区切り線 -->
+        <line x1="233" y1="15" x2="233" y2="255" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+        <line x1="467" y1="15" x2="467" y2="255" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+
+        <!-- === GK 1 バスケットキャッチ === -->
+        <!-- 頭 -->
+        <circle cx="117" cy="80" r="18" fill="#f5c09a" stroke="#5a3e28" stroke-width="1.5"/>
+        <circle cx="111" cy="78" r="2.5" fill="#333"/>
+        <circle cx="123" cy="78" r="2.5" fill="#333"/>
+        <path d="M148 70 Q160 55 170 58" fill="#5a3e28"/>
+        <!-- 体 -->
+        <path d="M99 98 L135 98 L138 165 L96 165 Z" fill="#e63946"/>
+        <text x="117" y="138" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="sans-serif">1</text>
+        <!-- 腕（前に出してボールを抱える） -->
+        <path d="M99 105 L78 125 L82 133 L103 115" fill="#f5c09a" stroke="#d4956a" stroke-width="1"/>
+        <path d="M135 105 L156 125 L152 133 L131 115" fill="#f5c09a" stroke="#d4956a" stroke-width="1"/>
+        <!-- ボール（胸の前） -->
+        <circle cx="117" cy="120" r="16" fill="white" stroke="#ccc" stroke-width="1.5"/>
+        <path d="M105 114 Q117 108 129 114" stroke="#333" stroke-width="1.2" fill="none"/>
+        <path d="M105 126 Q117 132 129 126" stroke="#333" stroke-width="1.2" fill="none"/>
+        <line x1="117" y1="104" x2="117" y2="136" stroke="#333" stroke-width="1.2"/>
+        <!-- グローブ -->
+        <ellipse cx="78" cy="128" rx="10" ry="7" fill="#f5c518" stroke="#d4a017" stroke-width="1.5"/>
+        <ellipse cx="156" cy="128" rx="10" ry="7" fill="#f5c518" stroke="#d4a017" stroke-width="1.5"/>
+        <!-- 脚 -->
+        <path d="M100 165 L96 200 L88 248" stroke="#111" stroke-width="13" stroke-linecap="round"/>
+        <path d="M134 165 L138 200 L146 248" stroke="#111" stroke-width="13" stroke-linecap="round"/>
+        <ellipse cx="84" cy="249" rx="13" ry="6" fill="#222"/>
+        <ellipse cx="150" cy="249" rx="13" ry="6" fill="#222"/>
+        <!-- 膝曲げ表現 -->
+        <text x="117" y="225" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">膝を曲げて低く</text>
+
+        <!-- === GK 2 スクープキャッチ === -->
+        <circle cx="350" cy="80" r="18" fill="#f5c09a" stroke="#5a3e28" stroke-width="1.5"/>
+        <circle cx="344" cy="78" r="2.5" fill="#333"/>
+        <circle cx="356" cy="78" r="2.5" fill="#333"/>
+        <path d="M333 98 L368 98 L371 165 L330 165 Z" fill="#2d9e4f"/>
+        <text x="350" y="138" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="sans-serif">1</text>
+        <!-- 前傾・しゃがみ気味 -->
+        <path d="M333 105 L310 145 L317 152 L338 115" fill="#f5c09a" stroke="#d4956a" stroke-width="1"/>
+        <path d="M368 105 L391 145 L384 152 L363 115" fill="#f5c09a" stroke="#d4956a" stroke-width="1"/>
+        <!-- ボール（地面付近） -->
+        <circle cx="350" cy="218" r="16" fill="white" stroke="#ccc" stroke-width="1.5"/>
+        <path d="M338 212 Q350 206 362 212" stroke="#333" stroke-width="1.2" fill="none"/>
+        <path d="M338 224 Q350 230 362 224" stroke="#333" stroke-width="1.2" fill="none"/>
+        <line x1="350" y1="202" x2="350" y2="234" stroke="#333" stroke-width="1.2"/>
+        <!-- グローブ（下に向けて受ける） -->
+        <ellipse cx="312" cy="150" rx="10" ry="7" fill="#f5c518" stroke="#d4a017" stroke-width="1.5" transform="rotate(30,312,150)"/>
+        <ellipse cx="388" cy="150" rx="10" ry="7" fill="#f5c518" stroke="#d4a017" stroke-width="1.5" transform="rotate(-30,388,150)"/>
+        <!-- 脚 -->
+        <path d="M333 165 L325 210 L320 248" stroke="#111" stroke-width="13" stroke-linecap="round"/>
+        <path d="M367 165 L375 210 L380 248" stroke="#111" stroke-width="13" stroke-linecap="round"/>
+        <ellipse cx="316" cy="249" rx="13" ry="6" fill="#222"/>
+        <ellipse cx="384" cy="249" rx="13" ry="6" fill="#222"/>
+        <text x="350" y="268" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">地面に手を添えてすくう</text>
+
+        <!-- === GK 3 オーバーハンドキャッチ === -->
+        <circle cx="583" cy="80" r="18" fill="#f5c09a" stroke="#5a3e28" stroke-width="1.5"/>
+        <circle cx="577" cy="78" r="2.5" fill="#333"/>
+        <circle cx="589" cy="78" r="2.5" fill="#333"/>
+        <path d="M566 98 L601 98 L604 165 L563 165 Z" fill="#e63946"/>
+        <text x="583" y="138" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="sans-serif">1</text>
+        <!-- 腕を上げる -->
+        <path d="M566 105 L543 68 L551 63 L570 100" fill="#f5c09a" stroke="#d4956a" stroke-width="1"/>
+        <path d="M601 105 L624 68 L616 63 L597 100" fill="#f5c09a" stroke="#d4956a" stroke-width="1"/>
+        <!-- ボール（上） -->
+        <circle cx="583" cy="50" r="16" fill="white" stroke="#ccc" stroke-width="1.5"/>
+        <path d="M571 44 Q583 38 595 44" stroke="#333" stroke-width="1.2" fill="none"/>
+        <path d="M571 56 Q583 62 595 56" stroke="#333" stroke-width="1.2" fill="none"/>
+        <line x1="583" y1="34" x2="583" y2="66" stroke="#333" stroke-width="1.2"/>
+        <!-- グローブ（上向き） -->
+        <ellipse cx="547" cy="65" rx="10" ry="7" fill="#f5c518" stroke="#d4a017" stroke-width="1.5" transform="rotate(-40,547,65)"/>
+        <ellipse cx="619" cy="65" rx="10" ry="7" fill="#f5c518" stroke="#d4a017" stroke-width="1.5" transform="rotate(40,619,65)"/>
+        <!-- 脚 -->
+        <path d="M566 165 L560 210 L554 248" stroke="#111" stroke-width="13" stroke-linecap="round"/>
+        <path d="M600 165 L606 210 L612 248" stroke="#111" stroke-width="13" stroke-linecap="round"/>
+        <ellipse cx="550" cy="249" rx="13" ry="6" fill="#222"/>
+        <ellipse cx="616" cy="249" rx="13" ry="6" fill="#222"/>
+        <text x="583" y="268" text-anchor="middle" fill="#555" font-size="10" font-family="sans-serif">Wの手の形で上から包む</text>
+      </svg>
+      <div class="illus-caption">3種類のキャッチング技術</div>
+    </div>
+
+    <div class="content-card">
+      <h3>キャッチ（胸の高さ）</h3>
+      <p>両手を前に出し、ボールを胸で包み込むように受ける。最初に覚えるべき基本キャッチ。</p>
+    </div>
+    <div class="content-card">
+      <h3>スクープキャッチ（腰より下）</h3>
+      <p>前傾みで腰を落とし、地面に手を添えてボールをすくい上げる。体全体でブロックするイメージ。</p>
+    </div>
+    <div class="content-card">
+      <h3>オーバーハンドキャッチ（顔より上）</h3>
+      <p>両手を上げ、親指を向き合わせた「W」の形でボールを包む。指を広げてしっかり確保する。</p>
+    </div>
+    <div class="key-point">キャッチしたらすぐボールを体に引き寄せ、落ち着いて周りを見てから配球する。6秒ある！</div>
+  </div>
+
+  <!-- ========== SECTION 4: ポジショニング ========== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <div class="section-title">ポジショニング（守備時）</div>
+    </div>
+
+    <div class="illus-box">
+      <svg viewBox="0 0 500 320" xmlns="http://www.w3.org/2000/svg" width="500">
+        <rect width="500" height="320" fill="#3a9e5f"/>
+        <defs>
+          <pattern id="grass2" width="30" height="30" patternUnits="userSpaceOnUse">
+            <rect width="30" height="15" fill="#3a9e5f"/>
+            <rect y="15" width="30" height="15" fill="#35915a"/>
+          </pattern>
+        </defs>
+        <rect width="500" height="320" fill="url(#grass2)"/>
+
+        <!-- ゴール -->
+        <rect x="190" y="10" width="120" height="50" fill="none" stroke="white" stroke-width="3"/>
+        <rect x="190" y="10" width="120" height="50" fill="rgba(255,255,255,0.15)"/>
+        <!-- ゴールエリア -->
+        <rect x="155" y="60" width="190" height="60" fill="rgba(255,255,255,0.06)" stroke="white" stroke-width="1.5"/>
+        <!-- ペナルティエリア -->
+        <rect x="100" y="60" width="300" height="120" fill="rgba(255,255,255,0.06)" stroke="white" stroke-width="2"/>
+        <!-- ペナルティスポット -->
+        <circle cx="250" cy="195" r="4" fill="white"/>
+
+        <!-- ゴールライン -->
+        <line x1="0" y1="60" x2="500" y2="60" stroke="white" stroke-width="2"/>
+
+        <!-- 基本ポジション -->
+        <!-- GK（基本） -->
+        <circle cx="250" cy="105" r="18" fill="#f5c09a" stroke="white" stroke-width="2"/>
+        <circle cx="244" cy="102" r="2.5" fill="#333"/>
+        <circle cx="256" cy="102" r="2.5" fill="#333"/>
+        <rect x="238" y="123" width="24" height="30" rx="4" fill="#e63946"/>
+        <text x="250" y="143" text-anchor="middle" fill="white" font-size="13" font-weight="bold" font-family="sans-serif">GK</text>
+        <!-- 脚 -->
+        <line x1="244" y1="153" x2="240" y2="175" stroke="#f5c09a" stroke-width="10" stroke-linecap="round"/>
+        <line x1="256" y1="153" x2="260" y2="175" stroke="#f5c09a" stroke-width="10" stroke-linecap="round"/>
+        <ellipse cx="238" cy="176" rx="10" ry="5" fill="#222"/>
+        <ellipse cx="262" cy="176" rx="10" ry="5" fill="#222"/>
+
+        <!-- ボール（正面） -->
+        <circle cx="250" cy="270" r="14" fill="white" stroke="#aaa" stroke-width="1.5"/>
+        <path d="M240 264 Q250 258 260 264" stroke="#555" stroke-width="1" fill="none"/>
+        <path d="M240 276 Q250 282 260 276" stroke="#555" stroke-width="1" fill="none"/>
+        <line x1="250" y1="256" x2="250" y2="284" stroke="#555" stroke-width="1"/>
+
+        <!-- ボール→GK結線 -->
+        <line x1="250" y1="256" x2="250" y2="183" stroke="#ffe066" stroke-width="2" stroke-dasharray="6,4"/>
+        <text x="270" y="230" fill="#ffe066" font-size="11" font-weight="bold" font-family="sans-serif">ゴールとボールを</text>
+        <text x="270" y="244" fill="#ffe066" font-size="11" font-weight="bold" font-family="sans-serif">結んだ線上に立つ</text>
+
+        <!-- サイドのボール -->
+        <circle cx="90" cy="260" r="12" fill="white" stroke="#aaa" stroke-width="1.5" opacity="0.7"/>
+        <!-- サイド時GKポジション（ニア寄り） -->
+        <circle cx="205" cy="105" r="14" fill="#f5c09a" stroke="#ffe066" stroke-width="2" stroke-dasharray="3" opacity="0.8"/>
+        <text x="205" y="109" text-anchor="middle" fill="#ffe066" font-size="9" font-weight="bold" font-family="sans-serif">GK</text>
+        <line x1="90" y1="248" x2="205" y2="119" stroke="#ffe066" stroke-width="1.5" stroke-dasharray="4" opacity="0.7"/>
+        <text x="100" y="220" fill="#ffe066" font-size="10" font-family="sans-serif">サイドから</text>
+        <text x="100" y="233" fill="#ffe066" font-size="10" font-family="sans-serif">→ニアを締める</text>
+
+        <!-- ラベル -->
+        <text x="250" y="290" text-anchor="middle" fill="white" font-size="11" font-family="sans-serif">ボール（正面）</text>
+        <text x="250" y="55" text-anchor="middle" fill="white" font-size="12" font-weight="bold" font-family="sans-serif">ゴール</text>
+        <text x="250" y="175" text-anchor="middle" fill="white" font-size="10" font-family="sans-serif">ペナルティエリア</text>
+      </svg>
+      <div class="illus-caption">ポジショニングの基本 ── ゴールとボールを結ぶ線上に立つ</div>
+    </div>
+
+    <table>
+      <tr><th>ボールの位置</th><th>GKのポジション</th></tr>
+      <tr><td>相手ゴール近く（味方攻撃中）</td><td>ペナルティエリア前あたりまで出る</td></tr>
+      <tr><td>ハーフウェーライン付近</td><td>ペナルティエリア内の中央</td></tr>
+      <tr><td>正面から攻撃</td><td>ゴールラインから1〜2歩前</td></tr>
+      <tr><td>サイドから攻撃</td><td>ニアポスト側を締める</td></tr>
+      <tr><td>1対1（相手が近い）</td><td>前に出てシュートコースを狭める</td></tr>
+    </table>
+    <div class="key-point">「ボールが動いたら自分も動く」この習慣だけ最初に身につけさせれば十分。</div>
+  </div>
+
+  <!-- ========== SECTION 5: 1対1 ========== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">05</div>
+      <div class="section-title">1対1の構えと対応</div>
+    </div>
+
+    <div class="illus-box">
+      <svg viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg" width="500">
+        <rect width="500" height="300" fill="#f0f8f2"/>
+        <rect x="0" y="265" width="500" height="35" fill="#4a8c3f" opacity="0.3"/>
+        <line x1="0" y1="265" x2="500" y2="265" stroke="#4a8c3f" stroke-width="2"/>
+
+        <!-- GK（低い構え） -->
+        <!-- 頭 -->
+        <circle cx="110" cy="110" r="20" fill="#f5c09a" stroke="#5a3e28" stroke-width="2"/>
+        <circle cx="103" cy="107" r="3" fill="#333"/>
+        <circle cx="117" cy="107" r="3" fill="#333"/>
+        <!-- 体 -->
+        <path d="M88 130 L132 130 L136 195 L84 195 Z" fill="#e63946"/>
+        <!-- 腕を広げた構え（低め左右に開く） -->
+        <path d="M88 138 L52 168 L57 178 L94 150" fill="#f5c09a" stroke="#d4956a" stroke-width="1"/>
+        <path d="M132 138 L168 168 L163 178 L126 150" fill="#f5c09a" stroke="#d4956a" stroke-width="1"/>
+        <!-- グローブ（左右斜め前） -->
+        <ellipse cx="50" cy="173" rx="13" ry="9" fill="#f5c518" stroke="#d4a017" stroke-width="1.5" transform="rotate(-20,50,173)"/>
+        <ellipse cx="170" cy="173" rx="13" ry="9" fill="#f5c518" stroke="#d4a017" stroke-width="1.5" transform="rotate(20,170,173)"/>
+        <!-- 指 -->
+        <line x1="42" y1="168" x2="38" y2="162" stroke="#d4a017" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="48" y1="165" x2="45" y2="158" stroke="#d4a017" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="178" y1="168" x2="182" y2="162" stroke="#d4a017" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="172" y1="165" x2="175" y2="158" stroke="#d4a017" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- 膝深く曲げた脚 -->
+        <path d="M88 195 L78 235 L68 263" stroke="#111" stroke-width="14" stroke-linecap="round"/>
+        <path d="M132 195 L142 235 L152 263" stroke="#111" stroke-width="14" stroke-linecap="round"/>
+        <ellipse cx="64" cy="264" rx="14" ry="6" fill="#222"/>
+        <ellipse cx="156" cy="264" rx="14" ry="6" fill="#222"/>
+
+        <!-- 相手（FW） -->
+        <circle cx="390" cy="105" r="18" fill="#aaccff" stroke="#336699" stroke-width="2"/>
+        <circle cx="384" cy="102" r="2.5" fill="#333"/>
+        <circle cx="396" cy="102" r="2.5" fill="#333"/>
+        <rect x="374" y="123" width="32" height="28" rx="4" fill="#3366cc"/>
+        <line x1="384" y1="151" x2="378" y2="195" stroke="#f5c09a" stroke-width="12" stroke-linecap="round"/>
+        <line x1="396" y1="151" x2="402" y2="195" stroke="#f5c09a" stroke-width="12" stroke-linecap="round"/>
+        <ellipse cx="374" cy="196" rx="12" ry="5" fill="#222"/>
+        <ellipse cx="406" cy="196" rx="12" ry="5" fill="#222"/>
+        <!-- 相手の腕（ドリブル） -->
+        <path d="M374 130 L355 155" stroke="#f5c09a" stroke-width="10" stroke-linecap="round"/>
+        <path d="M406 130 L425 155" stroke="#f5c09a" stroke-width="10" stroke-linecap="round"/>
+        <!-- ボール（相手足元） -->
+        <circle cx="380" cy="215" r="13" fill="white" stroke="#aaa" stroke-width="1.5"/>
+        <path d="M371 209 Q380 203 389 209" stroke="#555" stroke-width="1" fill="none"/>
+        <line x1="380" y1="202" x2="380" y2="228" stroke="#555" stroke-width="1"/>
+
+        <!-- 矢印（FW→GK） -->
+        <path d="M355 180 L185 180" stroke="#e63946" stroke-width="2.5" stroke-dasharray="8,4" marker-end="url(#arrow)"/>
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#e63946"/>
+          </marker>
+        </defs>
+        <text x="270" y="170" text-anchor="middle" fill="#e63946" font-size="12" font-weight="bold" font-family="sans-serif">ドリブルで向かってくる</text>
+
+        <!-- アノテーション -->
+        <text x="110" y="55" text-anchor="middle" fill="#1a6b2f" font-size="13" font-weight="bold" font-family="sans-serif">GKの構え</text>
+        <line x1="52" y1="165" x2="30" y2="140" stroke="#555" stroke-width="1.2" stroke-dasharray="3"/>
+        <text x="5" y="132" fill="#555" font-size="10" font-family="sans-serif">左右に</text>
+        <text x="5" y="144" fill="#555" font-size="10" font-family="sans-serif">少し開く</text>
+        <line x1="170" y1="165" x2="192" y2="140" stroke="#555" stroke-width="1.2" stroke-dasharray="3"/>
+        <text x="194" y="132" fill="#555" font-size="10" font-family="sans-serif">体を大きく</text>
+        <text x="194" y="144" fill="#555" font-size="10" font-family="sans-serif">見せる</text>
+        <line x1="68" y1="248" x2="40" y2="248" stroke="#1a6b2f" stroke-width="1.2" stroke-dasharray="3"/>
+        <text x="5" y="250" fill="#1a6b2f" font-size="10" font-family="sans-serif">深く</text>
+        <text x="5" y="262" fill="#1a6b2f" font-size="10" font-family="sans-serif">膝を曲げる</text>
+
+        <text x="390" y="55" text-anchor="middle" fill="#336699" font-size="13" font-weight="bold" font-family="sans-serif">相手FW</text>
+      </svg>
+      <div class="illus-caption">1対1 ── 低く大きく構えてコースを消す</div>
+    </div>
+
+    <div class="content-card">
+      <h3>間合いの詰め方</h3>
+      <ul>
+        <li>一気に飛び込まず、ゆっくり前に出る</li>
+        <li>相手がシュートモーションに入ったら止まる</li>
+        <li>相手が近づくほど重心を低くする</li>
+      </ul>
+    </div>
+    <div class="ng-box">早めに飛び込む・後ずさりする・目をつぶる・腰が引ける → すべてNG</div>
+    <div class="key-point">「飛び込まず、大きく構えて、ボールだけ見る」この一言を小学生に伝えれば十分。</div>
+  </div>
+
+  <!-- ========== SECTION 6: ディフレクション ========== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">06</div>
+      <div class="section-title">ディフレクション（弾き）</div>
+    </div>
+
+    <div class="illus-box">
+      <svg viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg" width="500">
+        <rect width="500" height="260" fill="#f0f8f2"/>
+        <rect x="0" y="230" width="500" height="30" fill="#4a8c3f" opacity="0.25"/>
+        <line x1="0" y1="230" x2="500" y2="230" stroke="#4a8c3f" stroke-width="2"/>
+
+        <!-- ゴールポスト -->
+        <rect x="30" y="30" width="8" height="200" fill="#ccc" stroke="#aaa" stroke-width="1"/>
+        <rect x="30" y="30" width="240" height="8" fill="#ccc" stroke="#aaa" stroke-width="1"/>
+        <rect x="262" y="30" width="8" height="200" fill="#ccc" stroke="#aaa" stroke-width="1"/>
+
+        <!-- GK -->
+        <circle cx="150" cy="80" r="18" fill="#f5c09a" stroke="#5a3e28" stroke-width="1.5"/>
+        <circle cx="144" cy="77" r="2.5" fill="#333"/>
+        <circle cx="156" cy="77" r="2.5" fill="#333"/>
+        <rect x="133" y="98" width="34" height="35" rx="4" fill="#e63946"/>
+        <!-- 腕を上に伸ばす（上に弾く） -->
+        <path d="M133 105 L108 60 L117 55 L140 102" fill="#f5c09a" stroke="#d4956a" stroke-width="1"/>
+        <!-- グローブ（上） -->
+        <ellipse cx="112" cy="56" rx="13" ry="9" fill="#f5c518" stroke="#d4a017" stroke-width="1.5" transform="rotate(-30,112,56)"/>
+        <!-- 脚 -->
+        <line x1="140" y1="133" x2="133" y2="175" stroke="#111" stroke-width="13" stroke-linecap="round"/>
+        <line x1="160" y1="133" x2="167" y2="175" stroke="#111" stroke-width="13" stroke-linecap="round"/>
+        <ellipse cx="129" cy="176" rx="12" ry="5" fill="#222"/>
+        <ellipse cx="171" cy="176" rx="12" ry="5" fill="#222"/>
+
+        <!-- シュートボール（来る） -->
+        <circle cx="400" cy="130" r="12" fill="white" stroke="#aaa" stroke-width="1.5"/>
+        <!-- ボール軌道 -->
+        <path d="M400 130 L130 65" stroke="#3366cc" stroke-width="2" stroke-dasharray="8,4" marker-end="url(#arrow2)"/>
+        <defs>
+          <marker id="arrow2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#3366cc"/>
+          </marker>
+        </defs>
+        <text x="310" y="85" fill="#3366cc" font-size="11" font-weight="bold" font-family="sans-serif">強いシュート</text>
+
+        <!-- 弾いた後の軌道（上へ） -->
+        <path d="M120 52 Q100 15 80 5" stroke="#e63946" stroke-width="2.5" stroke-dasharray="6,3" marker-end="url(#arrow3)"/>
+        <defs>
+          <marker id="arrow3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#e63946"/>
+          </marker>
+        </defs>
+        <text x="55" y="28" fill="#e63946" font-size="12" font-weight="bold" font-family="sans-serif">上に弾く！</text>
+        <text x="55" y="42" fill="#e63946" font-size="11" font-family="sans-serif">バーの上へ</text>
+
+        <!-- NG表示（正面に弾く） -->
+        <path d="M120 60 L120 120" stroke="#999" stroke-width="1.5" stroke-dasharray="4"/>
+        <text x="340" y="195" fill="#c0392b" font-size="12" font-weight="bold" font-family="sans-serif">❌ 正面に弾かない！</text>
+        <text x="340" y="210" fill="#c0392b" font-size="11" font-family="sans-serif">詰めた相手に当たる危険</text>
+      </svg>
+      <div class="illus-caption">ディフレクション ── キャッチできないボールは上に弾いてコーナーへ</div>
+    </div>
+
+    <table>
+      <tr><th>種類</th><th>使い方</th><th>注意</th></tr>
+      <tr><td>上に弾く（最多）</td><td>バーの上へ弾いてCK</td><td>手のひら下側から押し上げる</td></tr>
+      <tr><td>横に弾く</td><td>ポストの外へ</td><td>必ずゴールの外方向へ</td></tr>
+      <tr><td>片手の指先</td><td>届かないボールへ</td><td>少し方向を変えるだけでOK</td></tr>
+    </table>
+    <div class="ng-box">正面に弾く・弱く弾く・下に弾く → いずれも失点リスク大</div>
+    <div class="key-point">「キャッチできないと思ったら迷わず上に弾く」この判断を瞬時にできるようにする。</div>
+  </div>
+
+  <!-- ========== SECTION 7: 左右の動き ========== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">07</div>
+      <div class="section-title">左右に素早く動くコツ</div>
+    </div>
+
+    <div class="content-card">
+      <h3>サイドステップの基本（まずこれだけ）</h3>
+      <ul>
+        <li>動く方向の足を先に出す</li>
+        <li>絶対に足をクロスさせない</li>
+        <li>膝を曲げたまま動く（立ち上がらない）</li>
+        <li>常に足を肩幅以上に保つ</li>
+      </ul>
+    </div>
+
+    <div class="step-flow">
+      <div class="step-item">膝を曲げて低く</div>
+      <div class="step-item">つま先重心</div>
+      <div class="step-item">細かくステップを踏み続ける</div>
+      <div class="step-item">蹴る瞬間に止まる</div>
+    </div>
+
+    <div class="key-point">「膝を曲げて、つま先重心で、足をクロスさせない」この3つで動きが格段に速くなる。</div>
+  </div>
+
+  <!-- ========== SECTION 8: 配球 ========== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">08</div>
+      <div class="section-title">キャッチ後の配球</div>
+    </div>
+
+    <div class="content-card">
+      <h3>配球の選択肢（優先順位順）</h3>
+      <ul>
+        <li><strong>ローリング（転がす）</strong>── 近くの味方へ。最初に覚えるべき基本</li>
+        <li><strong>オーバーハンド（上から投げる）</strong>── 中距離の味方へ</li>
+        <li><strong>足で蹴る</strong>── 遠くへ展開。小学生は無理しなくてOK</li>
+      </ul>
+    </div>
+
+    <div class="step-flow">
+      <div class="step-item">キャッチ</div>
+      <div class="step-item">落ち着く（6秒ある）</div>
+      <div class="step-item">顔を上げ周りを見る</div>
+      <div class="step-item">近くの味方に転がす</div>
+    </div>
+
+    <div class="key-point">最初はローリングだけ教えれば十分。「キャッチ→落ち着く→転がす」の流れを体に覚えさせる。</div>
+  </div>
+
+</div>
+
+<footer>
+  ⚽ ゴールキーパー指導ガイド｜小学生初心者向け &nbsp;|&nbsp; 指導の際はJFA公認ライセンスの指導者にご相談ください
+</footer>
+
+</body>
+</html>
