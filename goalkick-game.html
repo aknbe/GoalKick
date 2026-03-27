@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>GKトレーニング 8人制</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Orbitron:wght@700;900&display=swap');
+:root{--cyan:#00e5c8;--gold:#f7d44c;--red:#ff4545;--blue:#4da6ff;--bg:#0b1c12;--panel:rgba(8,24,14,0.95);--text:#d8f0e2;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);font-family:'Zen Kaku Gothic New',sans-serif;color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;}
+header{width:100%;max-width:520px;display:flex;align-items:center;justify-content:space-between;padding:8px 14px 6px;background:rgba(0,0,0,.55);border-bottom:2px solid var(--cyan);}
+.h-title{font-family:'Orbitron',sans-serif;font-size:.86rem;letter-spacing:2px;color:var(--cyan);text-shadow:0 0 12px rgba(0,229,200,.5);}
+.h-right{display:flex;gap:10px;align-items:center;}
+.score-tag{font-family:'Orbitron',sans-serif;font-size:.9rem;color:var(--gold);}
+.stage-chip{background:var(--cyan);color:#000;font-weight:900;font-size:.66rem;padding:2px 8px;border-radius:20px;font-family:'Orbitron',sans-serif;}
+main{width:100%;max-width:520px;padding:6px 7px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;}
+#field-wrap{position:relative;width:100%;border-radius:10px;overflow:hidden;border:2px solid rgba(0,229,200,.2);box-shadow:0 0 36px rgba(0,229,200,.08),0 6px 28px rgba(0,0,0,.7);cursor:crosshair;touch-action:none;}
+canvas{display:block;width:100%;}
+#phase-banner{width:100%;padding:7px 13px;border-radius:8px;background:var(--panel);border:1px solid rgba(0,229,200,.22);font-size:.82rem;line-height:1.6;text-align:center;min-height:42px;display:flex;align-items:center;justify-content:center;}
+#phase-banner .hl{color:var(--cyan);font-weight:700;}
+#phase-banner .w{color:var(--gold);font-weight:700;}
+#kick-row{display:flex;gap:5px;width:100%;}
+.kt{flex:1;padding:7px 0;border:none;border-radius:7px;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.76rem;cursor:pointer;transition:all .14s;}
+.kt-kick{background:rgba(77,166,255,.18);color:var(--blue);border:1.5px solid var(--blue);}
+.kt-kick.on{background:var(--blue);color:#fff;}
+.kt-throw{background:rgba(247,212,76,.15);color:var(--gold);border:1.5px solid var(--gold);}
+.kt-throw.on{background:var(--gold);color:#000;}
+.kt-long{background:rgba(255,69,69,.15);color:var(--red);border:1.5px solid var(--red);}
+.kt-long.on{background:var(--red);color:#fff;}
+#power-row{width:100%;display:flex;align-items:center;gap:7px;font-size:.74rem;color:#88bbaa;}
+#pw-bg{flex:1;height:9px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;cursor:pointer;}
+#pw-fill{height:100%;width:50%;border-radius:5px;background:linear-gradient(90deg,var(--cyan),var(--gold));transition:width .05s;}
+#btn-row{display:flex;gap:7px;width:100%;}
+.btn{flex:1;padding:8px 0;border:none;border-radius:7px;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;}
+.btn-main{background:var(--cyan);color:#000;}
+.btn-sub{background:rgba(255,255,255,.07);color:var(--text);border:1px solid rgba(255,255,255,.12);}
+#legend{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;font-size:.70rem;color:#7aaa8d;}
+.leg{display:flex;align-items:center;gap:4px;}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+#overlay{display:none;position:absolute;left:50%;transform:translateX(-50%);
+  z-index:200;align-items:flex-start;justify-content:center;width:82%;pointer-events:auto;}
+#overlay.show{display:flex;}
+.ov-box{background:rgba(4,14,8,0.72);border:2.5px solid var(--cyan);border-radius:12px;
+  padding:12px 18px;text-align:center;
+  box-shadow:0 4px 24px rgba(0,0,0,.45);
+  width:100%;backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);}
+.ov-box.success{border-color:#00e5c8;box-shadow:0 0 20px rgba(0,229,200,.30);}
+.ov-box.failure{border-color:#ff4545;box-shadow:0 0 20px rgba(255,69,69,.28);}
+.ov-box.partial{border-color:#f7d44c;box-shadow:0 0 20px rgba(247,212,76,.25);}
+.ov-icon{font-size:1.6rem;margin-bottom:2px;}
+.ov-title{font-family:'Orbitron',sans-serif;font-size:.92rem;margin-bottom:2px;}
+.ov-pts{font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--gold);margin-bottom:4px;}
+.ov-msg{font-size:.76rem;color:#99ccaa;line-height:1.5;margin-bottom:10px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-title">GK TRAINING 8v8</div>
+  <div class="h-right">
+    <span class="stage-chip" id="stage-chip">STAGE 1</span>
+    <span class="score-tag"  id="score-disp">🏆 0</span>
+  </div>
+</header>
+<main>
+  <div id="learn-badge" style="width:100%;max-width:520px;text-align:center;font-size:.72rem;color:#6dbf9e;padding:3px 0 1px;letter-spacing:.5px;">🧠 初心者 | 0戦 | 習熟0%</div>
+  <div id="field-wrap">
+    <canvas id="c"></canvas>
+    <div id="overlay">
+      <div class="ov-box" id="ov-box">
+        <div class="ov-icon"  id="ov-icon">⚽</div>
+        <div class="ov-title" id="ov-title">-</div>
+        <div class="ov-pts"   id="ov-pts"></div>
+        <div class="ov-msg"   id="ov-msg"></div>
+        <button class="btn btn-main" onclick="nextRound()" style="width:100%;padding:7px 0;font-size:.82rem;">次のラウンド →</button>
+      </div>
+    </div>
+  </div>
+  <div id="phase-banner">読み込み中…</div>
+  <div id="kick-row">
+    <button class="kt kt-kick on" onclick="setKT('kick')"  id="btn-kt-kick">⚽ ゴールキック</button>
+    <button class="kt kt-throw"  onclick="setKT('throw')" id="btn-kt-throw">🤲 スロー</button>
+    <button class="kt kt-long"   onclick="setKT('long')"  id="btn-kt-long">🦵 パントキック</button>
+  </div>
+  <div id="power-row">
+    <span>パワー</span>
+    <div id="pw-bg"><div id="pw-fill"></div></div>
+    <span id="pw-label">12.5m/s</span>
+  </div>
+  <div id="form-row" style="display:flex;gap:6px;width:100%;align-items:center;">
+    <span style="font-size:.74rem;color:#88bbaa;white-space:nowrap;">味方</span>
+    <select id="sel-tm" onchange="setFormation('tm',this.value)"
+      style="flex:1;background:rgba(77,166,255,.15);color:var(--blue);border:1.5px solid var(--blue);
+             border-radius:7px;padding:6px 4px;font-family:'Zen Kaku Gothic New',sans-serif;
+             font-size:.76rem;font-weight:700;cursor:pointer;outline:none;">
+      <option value="random">🎲 ランダム</option>
+      <option value="3-3-1">3-3-1</option>
+      <option value="2-3-2">2-3-2</option>
+      <option value="3-2-2">3-2-2</option>
+      <option value="2-4-1">2-4-1</option>
+    </select>
+    <span style="font-size:.74rem;color:#88bbaa;white-space:nowrap;">相手</span>
+    <select id="sel-op" onchange="setFormation('op',this.value)"
+      style="flex:1;background:rgba(255,69,69,.15);color:var(--red);border:1.5px solid var(--red);
+             border-radius:7px;padding:6px 4px;font-family:'Zen Kaku Gothic New',sans-serif;
+             font-size:.76rem;font-weight:700;cursor:pointer;outline:none;">
+      <option value="random">🎲 ランダム</option>
+      <option value="3-3-1">3-3-1</option>
+      <option value="2-3-2">2-3-2</option>
+      <option value="3-2-2">3-2-2</option>
+      <option value="2-4-1">2-4-1</option>
+    </select>
+  </div>
+  <div id="btn-row">
+    <button class="btn btn-sub" onclick="resetRound()">🔄 やり直す</button>
+    <button class="btn btn-sub" onclick="showHelp()">❓ ルール</button>
+    <button class="btn btn-sub" id="btn-heat" onclick="toggleHeatmap()" style="flex:.7;font-size:.72rem;">🗺 熱地図OFF</button>
+    <button class="btn btn-sub" onclick="resetLearning()" style="flex:.7;font-size:.72rem;">🗑 学習リセット</button>
+  </div>
+  <div id="legend">
+    <span class="leg"><span class="dot" style="background:var(--cyan)"></span>GK</span>
+    <span class="leg"><span class="dot" style="background:var(--blue)"></span>味方(7)</span>
+    <span class="leg"><span class="dot" style="background:var(--red)"></span>相手(7)</span>
+    <span class="leg"><span class="dot" style="background:var(--gold)"></span>ボール</span>
+  </div>
+</main>
+<script>
+// ================================================================
+//  ALL GAME LOGIC IN METERS
+//  x: 0=left … 50=right
+//  y: 0=own goal line (screen bottom) … 68=opp goal line (screen top)
+//  Canvas conversion: px(mx), py(my) — used ONLY in draw functions
+// ================================================================
+const SC   = 6.5;              // px per meter (draw only)
+const FW   = 50, FH = 68;     // field size meters
+const PAD  = 16;
+const CW   = FW*SC+PAD*2, CH = FH*SC+PAD*2;
+const CV   = document.getElementById('c');
+const ctx  = CV.getContext('2d');
+CV.width=CW; CV.height=CH;
+
+// draw converters (meters → canvas px, y-flipped)
+const px = mx => PAD + mx*SC;
+const py = my => PAD + (FH - my)*SC;
+
+// ── Field metric landmarks (meters) ─────────────────────────
+const HALF   = 34;
+const OWN_PA = 12, OWN_GA = 4;
+const OPP_PA = FH-12, OPP_GA = FH-4;
+const GL_L=(FW-5)/2, GL_R=(FW+5)/2;
+const PA_L=(FW-27)/2, PA_R=(FW+27)/2;
+const GA_L=(FW-13)/2, GA_R=(FW+13)/2;
+const CX=FW/2, CC_R=7;
+
+// ── Speed constants (m/s) & physics ──────────────────────────
+// All player/ball speeds defined in m/s.
+// Converted to m/frame by multiplying with DT = 1/FPS.
+const FPS = 60;
+const DT  = 1 / FPS;            // seconds per frame
+const mps = v => v * DT;        // m/s  →  m/frame helper
+
+// Ball kick speeds — bar is now ABSOLUTE (0..MAX_KICK_MS m/s)
+// power bar position = actual speed in m/s / MAX_KICK_MS
+const MAX_KICK_MS = 25.0;   // absolute max for all kick types (m/s)
+const KT={
+  kick: {col:'#4da6ff', label:'ゴールキック', defaultPower:.50},  // 50% = 12.5 m/s
+  throw:{col:'#f7d44c', label:'スロー',       defaultPower:.35},  // 35% =  8.75 m/s
+  long: {col:'#ff4545', label:'パントキック',  defaultPower:.60},  // 60% = 15 m/s
+};
+// Actual launch speed = MAX_KICK_MS * G.power  (m/s) → converted to m/frame via mps()
+const ktSpd = () => mps(MAX_KICK_MS * G.power);
+
+const PASS_SPD_MAX_MS = 12.0;  // m/s max pass speed
+const PASS_SPD   = mps(PASS_SPD_MAX_MS);
+const BALL_DECAY = 0.991;     // per-frame multiplier (dimensionless)
+const BALL_SLOW  = mps(3.0);  // m/frame: flying → loose below this
+const BALL_STOP  = mps(1.2);  // m/frame: ball considered stopped
+
+// Player speeds in m/s → converted to m/frame via mps()
+const TM_WANDER_MS       = 1.3;
+const TM_WANDER_PLACE_MS = 2.1;
+const TM_MAX_MS          = 4.0;   // top speed without ball (m/s)
+const TM_MAX_PLACE_MS    = 4.0;
+const TM_CHASE_BALL_MS   = 4.5;   // off-ball chase speed
+const TM_DRIBBLE_MS      = 3.0;   // dribbling speed (m/s)
+const OP_BASE_SPD_MS     = 2.2;   // stronger base opponent speed
+const OP_BASE_INC_MS     = 0.4;
+const OP_PRESS_MULT      = 1.7;   // press multiplier (was 1.55)
+const OP_DRIB_MULT       = 2.3;   // dribble press (was 2.15)
+const TM0_FLEE_MS        = 1.9;
+
+// Radii (meters)
+const R_TM_CATCH     = 1.5;   // narrowed: must be closer to receive
+const R_OP_INTERCEPT = 1.2;
+const R_OP_TACKLE    = 2.0;
+const R_TM_FLEE      = 12.3;
+const R_OP_SEP       = 5.8;
+const R_TM_SEP       = 9.3;   // 6.2 × 1.5
+const R_OP_BALL      = 16.9;
+const R_TM_BALL      = 18.5;
+const R_DANGER_PASS  = 4.9;
+const R_HALF_PRESS   = 4.6;
+const R_GK_AVOID     = 4.5;  // teammates keep this distance from GK
+
+// ── Player physics ───────────────────────────────────────────
+const PLAYER_R    = 0.75;   // player body radius (meters)
+const TM_ACC_MS2  = 2.5;    // teammate acceleration (m/s²)
+const TM_DEC_MS2  = 3.0;    // teammate deceleration (m/s²)
+const OP_ACC_MS2  = 3.0;    // opponent acceleration (m/s²)
+const OP_DEC_MS2  = 3.5;    // opponent deceleration (m/s²)
+const FRICTION    = 0.78;   // per-frame velocity multiplier
+// GK home position
+const GK_MX=CX, GK_MY=OWN_GA+1.5;
+// Opponent GK — stationary at opp PA arc area (y ≈ OPP_PA = 56m)
+const OPP_GK = { mx: CX, my: OPP_PA - 1.5 }; // just inside opp PA top edge
+
+// ── Placement helpers ────────────────────────────────────────
+function rnd(a,b){return a+Math.random()*(b-a);}
+function randInt(a,b){return Math.floor(rnd(a,b+0.999));}
+function farFrom(pts,nx,ny,d){return pts.every(p=>Math.hypot(p.mx-nx,p.my-ny)>=d);}
+
+// ── Formation definitions ────────────────────────────────────
+// heatmap-guided candidate: pick best of N random positions
+function heatBestPt(myA,myB,mxA,mxB,existing,minD,heatArr,nCandidates=8){
+  let best=null, bestV=-Infinity;
+  for(let k=0;k<nCandidates;k++){
+    let mx,my,t=0;
+    do{ mx=rnd(mxA,mxB); my=rnd(myA,myB); t++; }
+    while(!farFrom(existing,mx,my,minD) && t<40);
+    const v=(heatArr?(heatArr[hIdx(mx,my)]??0):0)+Math.random()*.15;
+    if(v>bestV){bestV=v;best={mx,my};}
+  }
+  return best??{mx:rnd(mxA,mxB),my:rnd(myA,myB)};
+}
+// Each formation is [ line1_count, line2_count, ... ] front→back
+// For teammates (7 outfield players, y axis: own PA edge ~ halfway):
+//   line1 (front) = highest y (near halfway)
+//   last line (back) = lowest y (near own PA)
+// For opponents (7 players, y axis: just above own PA ~ halfway):
+//   same logic but mirrored via opY()
+
+// Formation table: key → [ lines ] front-to-back
+const FORMATIONS = {
+  'random': null,
+  '3-3-1': [3,3,1],
+  '2-3-2': [2,3,2],
+  '3-2-2': [3,2,2],
+  '2-4-1': [2,4,1],
+};
+
+let G_TM_FORM = 'random';  // selected teammate formation
+let G_OP_FORM = 'random';  // selected opponent formation
+
+function setFormation(who, val){
+  if(who==='tm') G_TM_FORM=val;
+  else           G_OP_FORM=val;
+}
+
+// Spread n players evenly across field width with jitter
+function spreadX(n, margin=3.5){
+  const xs=[];
+  for(let i=0;i<n;i++){
+    const t=(n===1)?0.5:(i/(n-1));
+    xs.push(clamp(margin + t*(FW-margin*2) + rnd(-2.5,2.5), 1.5, FW-1.5));
+  }
+  return xs;
+}
+
+// Generate positions from a formation array for teammates
+// lines[] = player count per line, front→back
+// yLines[] = y center per line (meters), front→back
+function formationPts(lines, yLines, jitterY=2.5, heat=null, baseSPD=null){
+  const pts=[];
+  lines.forEach((n,li)=>{
+    const yCenter=yLines[li];
+    const xs=spreadX(n);
+    xs.forEach(x=>{
+      const yBase=yCenter+rnd(-jitterY,jitterY);
+      const my=clamp(yBase,5.1,FH-1);
+      if(baseSPD!==null){
+        pts.push({mx:x,my,spd:mps(baseSPD*rnd(.9,1.2))});
+      } else {
+        // Heat-guided jitter: try a few variants and pick best
+        if(heat){
+          let best={mx:x,my},bestV=-Infinity;
+          for(let k=0;k<5;k++){
+            const tx=clamp(x+rnd(-3,3),1.5,FW-1.5);
+            const ty=clamp(yCenter+rnd(-jitterY,jitterY),5.1,FH-1);
+            const v=(heat[hIdx(tx,ty)]??0)+Math.random()*.12;
+            if(v>bestV){bestV=v;best={mx:tx,my:ty};}
+          }
+          pts.push(best);
+        } else {
+          pts.push({mx:x,my});
+        }
+      }
+    });
+  });
+  return pts;
+}
+
+// Formation notation: 後-中-前 (back to front)
+// lines[0] = back (lowest y, closest to own goal)
+// lines[last] = front (highest y, closest to halfway)
+// Teammates: y=15(back) … y=36(front)
+function tmYLinesForward(lines){
+  const n=lines.length;
+  const yMin=15, yMax=36;
+  // i=0 → yMin (back), i=n-1 → yMax (front)
+  return lines.map((_,i)=>yMin + (i/Math.max(n-1,1))*(yMax-yMin));
+}
+
+// Opponents: y=13(back) … y=38(front)
+function opYLinesForward(lines){
+  const n=lines.length;
+  const yMin=13, yMax=38;
+  return lines.map((_,i)=>yMin + (i/Math.max(n-1,1))*(yMax-yMin));
+}
+
+function genTeammates(){
+  const nums=[2,3,4,5,7,9,11], pts=[], MIN=3.5;
+  const heat=Brain.rounds>0 ? Brain.tmHeat : null;
+
+  // tm[0]: wing player near own PA (not in PA itself)
+  const side=Math.random()<.5;
+  const p0=heatBestPt(5.1,OWN_PA-0.5, side?2:34, side?14:48, pts, MIN, heat, 6);
+  pts.push(p0);
+
+  // Remaining 6: use formation or random zones
+  const formKey = G_TM_FORM==='random'?null:G_TM_FORM;
+  const lines = formKey ? FORMATIONS[formKey] : null;
+
+  if(lines){
+    const yLines=tmYLinesForward(lines);
+    const fPts=formationPts(lines,yLines,2.5,heat,null);
+    // Take first 6 (formation should sum to 6)
+    fPts.slice(0,6).forEach(p=>pts.push({mx:p.mx,my:p.my}));
+    // Fill if short
+    while(pts.length<7){
+      const p=heatBestPt(14,36,1.5,FW-1.5,pts,MIN,heat,8);
+      pts.push(p);
+    }
+  } else {
+    // Random zone placement (original behaviour)
+    const nC=randInt(1,3), nA=randInt(1,Math.min(3,6-nC)), nB=6-nA-nC;
+    for(let i=0;i<nA;i++) pts.push(heatBestPt(14,22,1.5,FW-1.5,pts,MIN,heat,8));
+    for(let i=0;i<nB;i++) pts.push(heatBestPt(22,30,1.5,FW-1.5,pts,MIN,heat,8));
+    for(let i=0;i<nC;i++) pts.push(heatBestPt(30,39,1.5,FW-1.5,pts,MIN,heat,8));
+  }
+
+  return pts.slice(0,7).map((p,i)=>({...p,num:nums[i]}));
+}
+
+function genOpponents(si){
+  const base_ms=OP_BASE_SPD_MS+si*OP_BASE_INC_MS, pts=[], MIN=3.5;
+  const mkSpd=()=>mps(base_ms*rnd(.9,1.2));
+
+  const formKey = G_OP_FORM==='random'?null:G_OP_FORM;
+  const lines = formKey ? FORMATIONS[formKey] : null;
+
+  if(lines){
+    const yLines=opYLinesForward(lines);
+    const fPts=formationPts(lines,yLines,2.5,null,base_ms);
+    fPts.slice(0,7).forEach(p=>{
+      if(!p.spd) p.spd=mkSpd();
+      pts.push(p);
+    });
+    while(pts.length<7){
+      let mx,my,t=0;
+      do{mx=rnd(2,FW-2);my=rnd(13,38);t++;}while(!farFrom(pts,mx,my,MIN)&&t<50);
+      pts.push({mx,my,spd:mkSpd()});
+    }
+  } else {
+    // Random zone placement (original behaviour)
+    const nC=randInt(1,3), nA=randInt(1,Math.min(3,7-nC)), nB=7-nA-nC;
+    for(let i=0;i<nA;i++){let mx,my,t=0;do{mx=rnd(2,FW-2);my=rnd(12,17);t++;}while(!farFrom(pts,mx,my,MIN)&&t<50);pts.push({mx,my,spd:mkSpd()});}
+    for(let i=0;i<nB;i++){let mx,my,t=0;do{mx=rnd(2,FW-2);my=rnd(17,29);t++;}while(!farFrom(pts,mx,my,MIN)&&t<50);pts.push({mx,my,spd:mkSpd()});}
+    for(let i=0;i<nC;i++){let mx,my,t=0;do{mx=rnd(2,FW-2);my=rnd(29,39);t++;}while(!farFrom(pts,mx,my,MIN)&&t<50);pts.push({mx,my,spd:mkSpd()});}
+  }
+
+  return pts.slice(0,7);
+}
+
+// ── State ────────────────────────────────────────────────────
+const N_STAGES=4;
+const TIMER_MAX=[360,300,250,210];
+const PRESS_DELAY=[3800,2600,1700,1100];
+
+let G={
+  stage:1,score:0,successCount:0,
+  phase:'place', kickType:'kick', power:.50,
+  ball:{mx:CX,my:OWN_GA+1,vmx:0,vmy:0,trail:[]},
+  ballHolder:null, gk:{mx:GK_MX,my:GK_MY},
+  teammates:[],opponents:[],
+  aimMX:null,aimMY:null,
+  timerF:0,timerRunning:false,pressDelayPassed:false,
+  rafId:null,particles:[],dribbleTimer:0,ended:false,
+};
+
+// ── Init ─────────────────────────────────────────────────────
+function initRound(){
+  cancelAnimationFrame(G.rafId);
+  const si=(G.stage-1)%N_STAGES;
+  Object.assign(G,{
+    phase:'place',timerF:0,timerRunning:false,pressDelayPassed:false,
+    aimMX:null,aimMY:null,particles:[],ballHolder:null,dribbleTimer:0,ended:false,
+    power:KT[G.kickType].defaultPower,
+    ball:{mx:CX,my:OWN_GA+1,vmx:0,vmy:0,trail:[]},
+    gk:{mx:GK_MX,my:GK_MY},
+  });
+  G.teammates=genTeammates().map(t=>({
+    mx:t.mx,my:t.my,omx:t.mx,omy:t.my,num:t.num,hasBall:false,
+    vx:0,vy:0,_runTarget:null,
+    wAngle:Math.random()*Math.PI*2,wTimer:Math.floor(Math.random()*70),anim:Math.random()*Math.PI*2,
+  }));
+  G.opponents=genOpponents(si).map(o=>({
+    mx:o.mx,my:o.my,omx:o.mx,omy:o.my,spd:o.spd,
+    vx:0,vy:0,
+    pAngle:Math.random()*Math.PI*2,pTimer:Math.floor(Math.random()*80),anim:Math.random()*Math.PI*2,
+  }));
+  document.getElementById('stage-chip').textContent='STAGE '+G.stage;
+  updateScore(); updatePw(); updatePlaceBanner();
+  // Assign mark roles for this round
+  Brain.assignMarkRoles();
+  updateLearnBadge();
+  loop();
+}
+
+function updatePlaceBanner(){
+  G.kickType==='kick'
+    ?setBanner('<span class="hl">①ゴールエリア内</span>をタップして<span class="w">ボールを置く</span>場所を選ぼう！')
+    :setBanner('<span class="hl">①ペナルティエリア内</span>をタップして<span class="w">ボールを置く</span>場所を選ぼう！');
+}
+
+// ── Loop / Update ────────────────────────────────────────────
+function loop(){update();draw();G.rafId=requestAnimationFrame(loop);}
+
+function update(){
+  if(G.ended) return;
+  const si=(G.stage-1)%N_STAGES;
+  if(G.timerRunning){
+    G.timerF++;
+    if(G.timerF*(1000/60)>=PRESS_DELAY[si]) G.pressDelayPassed=true;
+    // タイムアップ: ドリブル・パス中は判定しない（ボール保持中は続行できる）
+    if(G.timerF>=TIMER_MAX[si]&&(G.phase==='flying'||G.phase==='aim'||G.phase==='loose')){
+      doEnd(false,'タイムアップ！もっと素早く判断しよう。'); return;
+    }
+  }
+  if(G.phase==='flying'||G.phase==='loose'||G.phase==='pass') moveBall();
+  if(G.phase==='dribble') updateDribble();
+  updateTeammates();
+  updateOpponents();
+  // Resolve collisions between all players (2 passes for stability)
+  for(let pass=0;pass<2;pass++){
+    resolveGroup(G.teammates);
+    resolveGroup(G.opponents);
+    resolveGroups(G.teammates, G.opponents);
+  }
+  updateOffsideLine();
+  advParticles();
+}
+
+// ── Ball (all in meters) ─────────────────────────────────────
+function moveBall(){
+  const b=G.ball;
+  b.trail.push({mx:b.mx,my:b.my});
+  if(b.trail.length>22) b.trail.shift();
+  b.mx+=b.vmx; b.my+=b.vmy;
+  b.vmx*=BALL_DECAY; b.vmy*=BALL_DECAY;
+  spawnTrail();
+  if(G.phase==='flying'&&Math.hypot(b.vmx,b.vmy)<BALL_SLOW) G.phase='loose';
+  checkBall();
+}
+
+function checkBall(){
+  if(G.ended) return;
+  const{mx:bx,my:by}=G.ball;
+  const spd=Math.hypot(G.ball.vmx,G.ball.vmy);
+  // OOB
+  if(bx<-3||bx>FW+3||by<-3||by>FH+3){doEnd(false,'ボールがラインを割りました！');return;}
+  // Opponent intercept
+  for(let oi=0;oi<G.opponents.length;oi++){
+    const op=G.opponents[oi];
+    if(Math.hypot(bx-op.mx,by-op.my)<R_OP_INTERCEPT){
+      // Check approach angle: opponent must come from the side, not from behind ball
+      // Ball travel direction
+      const ballAng=Math.atan2(G.ball.vmy,G.ball.vmx);
+      // Direction from opponent to ball
+      const opToBallAng=Math.atan2(by-op.my,bx-op.mx);
+      let relAng=opToBallAng-ballAng;
+      while(relAng>Math.PI) relAng-=Math.PI*2;
+      while(relAng<-Math.PI) relAng+=Math.PI*2;
+      // If opponent is chasing from directly behind (same direction as ball, |relAng|<100°),
+      // they can't intercept — must approach from ≥100° off the ball's travel direction
+      if(Math.abs(relAng)<1.75) continue; // behind ball → no intercept
+
+      burstM(bx,by,'#ff4545');
+      let nearTM=-1,nearD=Infinity;
+      G.teammates.forEach((tm,ti)=>{const d=Math.hypot(tm.mx-op.mx,tm.my-op.my);if(d<nearD){nearD=d;nearTM=ti;}});
+      Brain.onBallIntercepted(oi,nearTM);
+      const pen=calcPenaltyPts();
+      G.score+=pen;
+      doEnd(false,'相手にカットされた！DFを避けて配球しよう。'+(pen<0?' ('+pen+'pts)':''));return;
+    }
+  }
+  // Teammate catches
+  for(let i=0;i<G.teammates.length;i++){
+    const tm=G.teammates[i];
+    if(Math.hypot(bx-tm.mx,by-tm.my)<R_TM_CATCH){
+      // ── Offside check ──────────────────────────────────────
+      if(tm._offside){
+        burstM(bx,by,'#ffaa00');
+        if(tm.my>HALF){
+          // Offside but past halfway: partial credit
+          G.score+=15;
+          doEnd(true,'⚠️ オフサイド！でもハーフ越え。+15pts',15,false);
+        } else {
+          doEnd(false,'⚠️ オフサイド！キックした瞬間に#'+tm.num+'が最終ラインより前にいた。');
+        }
+        return;
+      }
+      burstM(bx,by,'#00e5c8');
+      Brain.onBallCaught(i);
+      // パス成功: 残り時間を延長 (最大+120フレーム=2秒)
+      const si=(G.stage-1)%N_STAGES;
+      const extend=Math.min(120, TIMER_MAX[si]-G.timerF+60);
+      if(extend>0) G.timerF=Math.max(0, G.timerF-extend);
+      G.ballHolder=i;tm.hasBall=true;G.ball.trail=[];
+      G.phase='dribble';G.dribbleTimer=0;
+      setBanner('<span class="hl">#'+tm.num+'がキャッチ！</span>ハーフライン突破へ！');
+      return;
+    }
+  }
+  // Stopped
+  if(spd<BALL_STOP){
+    if(by>HALF){G.score+=20;doEnd(true,'ハーフを越えたが誰も受けられなかった。+20pts',20,false);}
+    else if(by>OWN_PA+1.5){G.score+=8;doEnd(true,'ボールは前進！+8pts',8,false);}
+    else{
+      const pen=calcPenaltyPts();
+      G.score+=pen;
+      doEnd(false,'ボールが止まった。パワーを上げよう！'+(pen<0?' ('+pen+'pts)':''));
+    }
+  }
+}
+
+// ── Player collision resolution ───────────────────────────────
+// Resolve overlap between two circular players (radius PLAYER_R each).
+// Uses positional correction + velocity reflection.
+function resolveCollision(a, b){
+  const dx=b.mx-a.mx, dy=b.my-a.my;
+  const dist=Math.sqrt(dx*dx+dy*dy)||0.001;
+  const minDist=PLAYER_R*2;
+  if(dist>=minDist) return;
+  // Push apart equally
+  const push=(minDist-dist)*0.5+0.01;
+  const nx=dx/dist, ny=dy/dist;
+  if(!a._static){ a.mx-=nx*push; a.my-=ny*push; }
+  if(!b._static){ b.mx+=nx*push; b.my+=ny*push; }
+  // Reflect velocity components along collision normal (elastic-ish)
+  const restitution=0.4;
+  if(!a._static&&!b._static){
+    const dvx=(a.vx??0)-(b.vx??0), dvy=(a.vy??0)-(b.vy??0);
+    const dot=dvx*nx+dvy*ny;
+    if(dot>0){ // moving toward each other
+      a.vx=(a.vx??0)-dot*nx*restitution;
+      a.vy=(a.vy??0)-dot*ny*restitution;
+      b.vx=(b.vx??0)+dot*nx*restitution;
+      b.vy=(b.vy??0)+dot*ny*restitution;
+    }
+  }
+}
+
+// Resolve all pairs in an array
+function resolveGroup(players){
+  for(let i=0;i<players.length;i++){
+    for(let j=i+1;j<players.length;j++){
+      resolveCollision(players[i],players[j]);
+    }
+  }
+}
+
+// Resolve between two different groups
+function resolveGroups(groupA, groupB){
+  groupA.forEach(a=>groupB.forEach(b=>resolveCollision(a,b)));
+}
+
+// ── [D] Free-run AI: find open space away from opponents ─────
+// Evaluates N random candidate positions and picks the one with
+// the highest score = distance from nearest opponent + forward bonus.
+// Called each dribble frame; result cached on tm._runTarget.
+function findBestRunPosition(tm, holder){
+  let best=null, bestScore=-Infinity;
+  const fwdMin=holder.my+2.0;
+  const fwdMax=Math.min(HALF+8, FH-2);
+  for(let trial=0;trial<14;trial++){
+    const tx=rnd(PA_L+1,PA_R-1);
+    const ty=rnd(fwdMin,fwdMax);
+    let minOppD=Infinity;
+    G.opponents.forEach(op=>{ minOppD=Math.min(minOppD,Math.hypot(op.mx-tx,op.my-ty)); });
+    let minTMD=Infinity;
+    G.teammates.forEach((tm2,j)=>{
+      if(tm2===tm||j===G.ballHolder) return;
+      minTMD=Math.min(minTMD,Math.hypot(tm2.mx-tx,tm2.my-ty));
+    });
+    const heatBonus=(Brain.rounds>2)?(Brain.tmHeat[hIdx(tx,ty)]??0)*3.0:0;
+    const forwardBonus=(ty-holder.my)*1.2;
+    const spreadBonus=Math.min(minTMD,8)*0.4;
+    const sc=minOppD+forwardBonus+spreadBonus+heatBonus;
+    if(sc>bestScore){bestScore=sc;best={tx,ty};}
+  }
+  return best??{tx:tm.omx,ty:Math.min(HALF+4,tm.omy+6)};
+}
+
+// ── Teammate physics (inertia + collision) ────────────────────
+function updateTeammates(){
+  G.teammates.forEach((tm,i)=>{
+    if(i===G.ballHolder) return;
+
+    // ── Desired velocity (target) from AI logic ────────────
+    let desVx=0, desVy=0;
+
+    // Chase ball
+    if(G.phase==='flying'||G.phase==='loose'||G.phase==='pass'){
+      const bd=Math.hypot(tm.mx-G.ball.mx,tm.my-G.ball.my);
+      if(bd<R_TM_BALL){
+        const pred=Brain.predictBall(Brain.tmPredFrames);
+        const tgx=pred?pred.mx:G.ball.mx, tgy=pred?pred.my:G.ball.my;
+        const dx=tgx-tm.mx,dy=tgy-tm.my,d=Math.sqrt(dx*dx+dy*dy)||1;
+        desVx=(dx/d)*mps(TM_CHASE_BALL_MS); desVy=(dy/d)*mps(TM_CHASE_BALL_MS);
+      } else if(bd>30){
+        const dx=G.ball.mx-tm.mx,dy=G.ball.my-tm.my,d=Math.sqrt(dx*dx+dy*dy)||1;
+        desVx=(dx/d)*mps(2.0); desVy=(dy/d)*mps(2.0);
+      }
+    }
+
+    if(desVx===0&&desVy===0){
+      // [D] Free-run AI: move to open space to create pass options
+      if(G.phase==='dribble'){
+        const holder=G.ballHolder!==null?G.teammates[G.ballHolder]:null;
+        if(holder){
+          // Refresh run target every 45 frames or when target is reached
+          const atTarget=tm._runTarget&&Math.hypot(tm.mx-tm._runTarget.tx,tm.my-tm._runTarget.ty)<2.5;
+          if(!tm._runTarget||G.dribbleTimer%45===1||atTarget){
+            tm._runTarget=findBestRunPosition(tm,holder);
+          }
+          const{tx,ty}=tm._runTarget;
+          const dx=tx-tm.mx,dy=ty-tm.my,d=Math.sqrt(dx*dx+dy*dy)||1;
+          const urgency=Math.min(1,d/8);  // slow down near target
+          const spd=mps(TM_MAX_MS)*urgency+mps(0.5);
+          desVx=(dx/d)*spd; desVy=(dy/d)*spd;
+        }
+      }
+
+      // tm[0] flee from ball
+      if(i===0&&(G.phase==='aim'||G.phase==='flying'||G.phase==='loose')){
+        const dx=tm.mx-G.ball.mx,dy=tm.my-G.ball.my,d=Math.sqrt(dx*dx+dy*dy)||1;
+        desVx=(dx/d)*mps(TM0_FLEE_MS); desVy=(dy/d)*mps(TM0_FLEE_MS);
+      }
+
+      // Separate from other teammates (prevent clustering)
+      G.teammates.forEach((tm2,j)=>{
+        if(j===i||j===G.ballHolder) return;
+        const dx=tm.mx-tm2.mx,dy=tm.my-tm2.my,d=Math.sqrt(dx*dx+dy*dy)||1;
+        if(d<R_TM_SEP){const s=((R_TM_SEP-d)/R_TM_SEP)*mps(5.5);desVx+=(dx/d)*s;desVy+=(dy/d)*s;}
+      });
+
+      // Flee opponents
+      G.opponents.forEach(op=>{
+        const dx=tm.mx-op.mx,dy=tm.my-op.my,d=Math.sqrt(dx*dx+dy*dy)||1;
+        if(d<R_TM_FLEE){const s=((R_TM_FLEE-d)/R_TM_FLEE)*mps(9.3);desVx+=(dx/d)*s;desVy+=(dy/d)*s;}
+      });
+
+      // Avoid GK
+      {
+        const dx=tm.mx-G.gk.mx,dy=tm.my-G.gk.my,d=Math.sqrt(dx*dx+dy*dy)||1;
+        if(d<R_GK_AVOID){const s=((R_GK_AVOID-d)/R_GK_AVOID)*mps(5.5);desVx+=(dx/d)*s;desVy+=(dy/d)*s;}
+      }
+
+      // Heatmap bias
+      if(Brain.rounds>2){
+        for(let a=0;a<8;a++){
+          const ang=(a/8)*Math.PI*2;
+          const cx2=clamp(tm.mx+Math.cos(ang)*6,.5,FW-.5);
+          const cy2=clamp(tm.my+Math.sin(ang)*6,5.1,FH-.5);
+          const v=Brain.tmHeatBias[hIdx(cx2,cy2)]??0;
+          if(v>0){desVx+=Math.cos(ang)*v*mps(0.9);desVy+=Math.sin(ang)*v*mps(0.9);}
+        }
+      }
+
+      // Wander
+      tm.wTimer++;
+      if(tm.wTimer>(G.phase==='place'?60:85)+Math.random()*40){tm.wTimer=0;tm.wAngle+=(Math.random()-.5)*1.2;}
+      const wSpd=mps(G.phase==='place'?TM_WANDER_PLACE_MS:TM_WANDER_MS);
+      desVx+=Math.cos(tm.wAngle)*wSpd;
+      desVy+=Math.sin(tm.wAngle)*wSpd;
+
+      // Spring to home
+      const fm=Math.hypot(desVx,desVy);
+      const sf=fm>mps(2.8)?mps(.03):mps(.054);
+      desVx+=(tm.omx-tm.mx)*sf; desVy+=(tm.omy-tm.my)*sf;
+
+      // Cap desired speed
+      const mag=Math.hypot(desVx,desVy)||1;
+      const maxS=mps(G.phase==='place'?TM_MAX_PLACE_MS:TM_MAX_MS);
+      if(mag>maxS){desVx=desVx/mag*maxS;desVy=desVy/mag*maxS;}
+    }
+
+    // ── Inertia: separate acceleration / deceleration ────────
+    const dvx=desVx-(tm.vx??0), dvy=desVy-(tm.vy??0);
+    const dv=Math.sqrt(dvx*dvx+dvy*dvy)||1;
+    const curSpd=Math.hypot(tm.vx??0,tm.vy??0);
+    const desSpd2=Math.hypot(desVx,desVy);
+    const accRate=mps(desSpd2>=curSpd ? TM_ACC_MS2 : TM_DEC_MS2);
+    const step=Math.min(accRate,dv);
+    tm.vx=(tm.vx??0)+(dvx/dv)*step;
+    tm.vy=(tm.vy??0)+(dvy/dv)*step;
+
+    // Friction
+    tm.vx*=FRICTION; tm.vy*=FRICTION;
+
+    // Integrate position
+    tm.mx+=tm.vx; tm.my+=tm.vy;
+
+    // Update wAngle to match actual velocity (for direction display)
+    if(Math.hypot(tm.vx,tm.vy)>mps(0.3)){
+      tm.wAngle=Math.atan2(tm.vy,tm.vx);
+    }
+
+    clampTM(tm, i);
+    // Clamp velocity at boundary
+    if(tm.mx<=.5||tm.mx>=FW-.5) tm.vx*=-.3;
+    if(tm.my<=5.1||tm.my>=FH-.5) tm.vy*=-.3;
+  });
+}
+function clampTM(tm, idx){
+  tm.mx=clamp(tm.mx,.5,FW-.5);
+  tm.my=clamp(tm.my,5.1,FH-.5);
+  if(idx !== 0 && tm.my < OWN_PA+0.5) tm.my = OWN_PA+0.5;
+  // Offside line: soft velocity push (not hard clamp) to prevent teleportation
+  // Only active when ball is in opponent half and offside line is meaningful
+  if(G._offsideLine!=null && G._offsideLine>HALF+1){
+    const maxY = G._offsideLine - 1.5;
+    if(tm.my > maxY){
+      // Push back with proportional force — never teleport
+      const over = tm.my - maxY;
+      tm.vy -= Math.min(over * 0.4, mps(TM_MAX_MS));
+      tm.my = Math.min(tm.my, maxY + 0.5);  // soft cap only 0.5m over
+    }
+  }
+  // Rear exclusion zone: push out any other teammate within 0.7m in rear ±60°
+  const REAR_R=0.7, REAR_ANG=Math.PI/3;
+  const myFacing=tm.wAngle??Math.PI/2;
+  const rearDir=myFacing+Math.PI;
+  G.teammates.forEach(tm2=>{
+    if(tm2===tm) return;
+    const dx=tm2.mx-tm.mx, dy=tm2.my-tm.my;
+    const d=Math.sqrt(dx*dx+dy*dy)||1;
+    if(d>REAR_R) return;
+    const ang=Math.atan2(dy,dx);
+    let diff=ang-rearDir;
+    while(diff>Math.PI) diff-=Math.PI*2;
+    while(diff<-Math.PI) diff+=Math.PI*2;
+    if(Math.abs(diff)<REAR_ANG){
+      const push=(REAR_R-d+0.1);
+      tm2.mx+=(dx/d)*push; tm2.my+=(dy/d)*push;
+    }
+  });
+}
+
+// ── Opponents (meters) ───────────────────────────────────────
+function updateOpponents(){
+  const now=Date.now()*.001;
+  G.opponents.forEach((op,i)=>{
+    // Separation
+    let sepx=0,sepy=0;
+    G.opponents.forEach((op2,j)=>{
+      if(j===i) return;
+      const dx=op.mx-op2.mx,dy=op.my-op2.my,d=Math.sqrt(dx*dx+dy*dy)||1;
+      if(d<R_OP_SEP){const s=((R_OP_SEP-d)/R_OP_SEP)*mps(4.6);sepx+=(dx/d)*s;sepy+=(dy/d)*s;}
+    });
+    if(!G.pressDelayPassed&&G.phase!=='flying'&&G.phase!=='loose'&&G.phase!=='pass'&&G.phase!=='dribble'){
+      // Patrol — keep 5m from sidelines
+      op.pTimer++;
+      if(op.pTimer>80+i*6){op.pTimer=0;op.pAngle+=(Math.random()-.5)*1.2;}
+      const ptx=op.omx+Math.sin(now*.28+op.anim)*4.9;
+      const pty=op.omy+Math.cos(now*.22+op.anim)*1.85;
+      const pdx=(ptx-op.mx)+sepx*.3, pdy=(pty-op.my)+sepy*.3;
+      const pd=Math.sqrt(pdx*pdx+pdy*pdy)||1;
+      const patrolSpd=mps(2.0);
+      const pDesVx=(pdx/pd)*patrolSpd, pDesVy=(pdy/pd)*patrolSpd;
+      const acc2=mps(mps(OP_ACC_MS2*0.5));
+      const pdvx=pDesVx-(op.vx??0), pdvy=pDesVy-(op.vy??0);
+      const pdv=Math.sqrt(pdvx*pdvx+pdvy*pdvy)||1;
+      op.vx=(op.vx??0)+(pdvx/pdv)*Math.min(acc2,pdv);
+      op.vy=(op.vy??0)+(pdvy/pdv)*Math.min(acc2,pdv);
+      op.vx*=FRICTION; op.vy*=FRICTION;
+      op.mx+=op.vx; op.my+=op.vy;
+      op._moveAng=Math.atan2(op.vy,op.vx);
+      // Clamp x: stay at least 5m from each sideline during pre-press phase
+      op.mx=clamp(op.mx, 5.0, FW-5.0);
+    } else {
+      // Find freest teammate — skip offside players (they're no threat)
+      let bestTM=null,bestScore=-Infinity;
+      const assignedTMIdx=Brain.opMarkAssign[i]??-1;
+      G.teammates.forEach((tm,ti)=>{
+        if(tm._offside) return;  // offside → no threat, ignore
+        const dMe=Math.hypot(tm.mx-op.mx,tm.my-op.my);
+        let minOC=Infinity;
+        G.opponents.forEach(op2=>{if(op2!==op)minOC=Math.min(minOC,Math.hypot(tm.mx-op2.mx,tm.my-op2.my));});
+        const hBonus=tm.my>HALF-R_HALF_PRESS?(tm.my-(HALF-R_HALF_PRESS))*1.23:0;
+        const markBonus=(Brain.rounds>4&&ti===assignedTMIdx)?5.5:0;
+        const sc=minOC*.5-dMe*.35+hBonus+markBonus;
+        if(sc>bestScore){bestScore=sc;bestTM=tm;}
+      });
+
+      let tx,ty;
+      if(G.phase==='flying'||G.phase==='loose'||G.phase==='pass'){
+        // [F] Zone press: compress block to intercept ball landing zone
+        const pred=Brain.predictBall(Brain.opPredFrames);
+        const pbx=pred?pred.mx:G.ball.mx, pby=pred?pred.my:G.ball.my;
+        const bd=Math.hypot(op.mx-pbx,op.my-pby);
+        const ballNearHalf = G.ball.my >= HALF-8 && G.ball.my <= HALF+8;
+        if(bd<R_OP_BALL || ballNearHalf){
+          // 2 nearest opponents chase the predicted landing point
+          // others spread into a compact zone block behind it
+          const myRank=(()=>{
+            let rank=0;
+            G.opponents.forEach(op2=>{
+              if(op2!==op&&Math.hypot(op2.mx-pbx,op2.my-pby)<bd) rank++;
+            });
+            return rank;
+          })();
+          if(myRank<2){
+            tx=pbx; ty=pby;  // closest 2 chase ball
+          } else {
+            // Others form a zone line 5m behind predicted point
+            const laneX=PA_L+((i+1)/(G.opponents.length+1))*(PA_R-PA_L);
+            const zoneY=clamp(pby-5, OWN_PA+1, HALF-1);
+            tx=laneX; ty=zoneY;
+          }
+        } else {
+          tx=bestTM?bestTM.mx:op.omx;ty=bestTM?bestTM.my:op.omy;
+        }
+      } else if(G.phase==='dribble'&&G.ballHolder!==null){
+        const h=G.teammates[G.ballHolder];
+        // All opponents converge if holder is near halfway
+        const holderNearHalf = h.my >= HALF-6;
+        if(i<3 || holderNearHalf){tx=h.mx;ty=h.my;}
+        else{tx=bestTM?bestTM.mx:h.mx;ty=bestTM?bestTM.my:h.my;}
+      } else {
+        tx=bestTM?bestTM.mx:op.omx;ty=bestTM?bestTM.my:op.omy;
+      }
+      const dx=tx-op.mx,dy=ty-op.my,d=Math.sqrt(dx*dx+dy*dy)||1;
+      const mult=G.phase==='dribble'?OP_DRIB_MULT:OP_PRESS_MULT;
+      const desSpd=op.spd*mult;
+      op._moveAng=Math.atan2(dy,dx);
+
+      let offx=0;
+      if(G.phase==='dribble' && G.ballHolder!==null){
+        const h=G.teammates[G.ballHolder];
+        const toTarget=Math.atan2(h.my-op.my, h.mx-op.mx);
+        const holderFacing=h._dribAngle??Math.PI/2;
+        let behindAng=toTarget-holderFacing;
+        while(behindAng>Math.PI) behindAng-=Math.PI*2;
+        while(behindAng<-Math.PI) behindAng+=Math.PI*2;
+        if(Math.abs(behindAng)<0.44){
+          const side=(op.mx<h.mx)?1:-1;
+          offx=side*mps(3.5);
+        }
+      }
+
+      // Desired velocity with lateral offset
+      const desVx=(dx/d)*desSpd+sepx*.4+offx;
+      const desVy=(dy/d)*desSpd+sepy*.4;
+
+      // Inertia: separate acceleration / deceleration
+      const dvx=desVx-(op.vx??0), dvy=desVy-(op.vy??0);
+      const dv=Math.sqrt(dvx*dvx+dvy*dvy)||1;
+      const opCurSpd=Math.hypot(op.vx??0,op.vy??0);
+      const opDesSpd=Math.hypot(desVx,desVy);
+      const opAcc=mps(opDesSpd>=opCurSpd?OP_ACC_MS2:OP_DEC_MS2);
+      const step=Math.min(opAcc,dv);
+      op.vx=(op.vx??0)+(dvx/dv)*step;
+      op.vy=(op.vy??0)+(dvy/dv)*step;
+      op.vx*=FRICTION; op.vy*=FRICTION;
+      op.mx+=op.vx; op.my+=op.vy;
+    }
+    op.mx=clamp(op.mx,.5,FW-.5);
+    op.my=clamp(op.my,.5,FH-.5);
+    if(op.my<OWN_PA+.9) op.my=OWN_PA+.9;
+    // Rear exclusion zone for opponents (0.7m, ±60° behind)
+    const REAR_R=0.7, REAR_ANG=Math.PI/3;
+    const myFacing2=op._moveAng??op.pAngle??0;
+    const rearDir2=myFacing2+Math.PI;
+    G.opponents.forEach(op2=>{
+      if(op2===op) return;
+      const dx=op2.mx-op.mx, dy=op2.my-op.my;
+      const d=Math.sqrt(dx*dx+dy*dy)||1;
+      if(d>REAR_R) return;
+      const ang=Math.atan2(dy,dx);
+      let diff=ang-rearDir2;
+      while(diff>Math.PI) diff-=Math.PI*2;
+      while(diff<-Math.PI) diff+=Math.PI*2;
+      if(Math.abs(diff)<REAR_ANG){
+        const push=(REAR_R-d+0.1);
+        op2.mx+=(dx/d)*push; op2.my+=(dy/d)*push;
+      }
+    });
+  });
+}
+
+// ── Dribble AI (meters) ──────────────────────────────────────
+function updateDribble(){
+  G.dribbleTimer++;
+  const h=G.teammates[G.ballHolder];
+  if(!h){doEnd(false,'error');return;}
+
+  let closestOppD=Infinity;
+  G.opponents.forEach(op=>{closestOppD=Math.min(closestOppD,Math.hypot(h.mx-op.mx,h.my-op.my));});
+
+  // ── Turn-time before passing ──────────────────────────────
+  // When a pass target is selected we store it and wait for turn completion.
+  // 180° turn = 0.3s = 18 frames → proportional for smaller angles
+  if(h._passTgt!=null){
+    const tgt=G.teammates[h._passTgt];
+    if(!tgt){ h._passTgt=null; }
+    else {
+      // compute angle change from current facing to target
+      const dx=tgt.mx-h.mx, dy=tgt.my-h.my;
+      const targetAngle=Math.atan2(dy,dx);
+      const curAngle=h._dribAngle??targetAngle;
+      let diff=targetAngle-curAngle;
+      while(diff>Math.PI) diff-=Math.PI*2;
+      while(diff<-Math.PI) diff+=Math.PI*2;
+      const TURN_RATE=Math.PI/18; // rad/frame → 180° in 18 frames (0.3s)
+      const step=clamp(diff,-TURN_RATE,TURN_RATE);
+      h._dribAngle=(curAngle+step+Math.PI*4)%(Math.PI*2);
+      h._turnTimer=(h._turnTimer||0)+1;
+      // After turn is complete (angle within 15°), execute pass
+      if(Math.abs(diff)<0.26 || h._turnTimer>24){
+        setBanner('<span class="hl">#'+h.num+'→#'+tgt.num+'</span>パス！'+(closestOppD<R_DANGER_PASS?'(緊急)':''));
+        const dx2=tgt.mx-G.ball.mx,dy2=tgt.my-G.ball.my,d2=Math.sqrt(dx2*dx2+dy2*dy2)||1;
+        G.ball.vmx=(dx2/d2)*PASS_SPD; G.ball.vmy=(dy2/d2)*PASS_SPD;
+        flagOffsideAtPass(G.ball.my);  // flag offside at pass release moment
+        h.hasBall=false; h._passTgt=null; h._turnTimer=0;
+        G.ballHolder=null; G.phase='pass'; G.dribbleTimer=0;
+        return;
+      }
+    }
+  }
+
+  // ── Pass selection ────────────────────────────────────────────
+  // Trigger: danger (opponent close) OR periodic check
+  const inDanger = closestOppD < R_DANGER_PASS;
+  // ハーフライン直前(3m以内)では危険時のみパス — 自分でドリブル突破を優先
+  const nearHalf = h.my >= HALF - 3.0;
+  const periodicCheck = !nearHalf && G.dribbleTimer>30 && G.dribbleTimer%60===0;
+  const shouldTryPass = inDanger || periodicCheck;
+
+  if(shouldTryPass && h._passTgt==null){
+    let best=-1, bestSc=-Infinity;
+    const facingAng = h._dribAngle ?? Math.PI/2;
+
+    G.teammates.forEach((tm,i)=>{
+      if(i===G.ballHolder) return;
+      // Min opponent distance from target player
+      let minOD=Infinity;
+      G.opponents.forEach(op=>{minOD=Math.min(minOD,Math.hypot(tm.mx-op.mx,tm.my-op.my));});
+      const coverThreshold = inDanger ? 2.0 : 3.0;
+      if(minOD < coverThreshold) return;
+
+      // ── Line-of-sight check: is an opponent on the pass lane? ──
+      // Project each opponent onto the line from h→tm.
+      // If any opponent is within 2.5m of the lane AND between h and tm → blocked.
+      const pdx=tm.mx-h.mx, pdy=tm.my-h.my;
+      const pLen=Math.sqrt(pdx*pdx+pdy*pdy)||1;
+      let laneBlocked=false;
+      G.opponents.forEach(op=>{
+        // Parameter t: projection of (op - h) onto (tm - h) direction
+        const t=((op.mx-h.mx)*pdx+(op.my-h.my)*pdy)/(pLen*pLen);
+        if(t<0.15||t>0.85) return;  // outside the lane segment
+        // Perpendicular distance from op to the lane
+        const perpX=h.mx+t*pdx-op.mx, perpY=h.my+t*pdy-op.my;
+        const perpD=Math.sqrt(perpX*perpX+perpY*perpY);
+        if(perpD<2.5) laneBlocked=true;
+      });
+      if(laneBlocked) return;
+
+      // Direction filter ±120°
+      const passAng = Math.atan2(tm.my-h.my, tm.mx-h.mx);
+      let angDiff = passAng - facingAng;
+      while(angDiff > Math.PI) angDiff -= Math.PI*2;
+      while(angDiff < -Math.PI) angDiff += Math.PI*2;
+      if(Math.abs(angDiff) > Math.PI*2/3) return;
+
+      const forwardBonus = (tm.my-h.my)*0.5;
+      // ハーフ手前へ戻るパスは強くペナルティ
+      const backwardPenalty = (tm.my < h.my - 2.0) ? -8.0 : 0;
+      // パス先がハーフ越えなら大きくボーナス
+      const halfBonus = (tm.my > HALF) ? 6.0 : 0;
+      const sc = forwardBonus + minOD*0.9 + backwardPenalty + halfBonus;
+      if(sc>bestSc){bestSc=sc;best=i;}
+    });
+
+    // Fallback without LOS/direction filter if still in danger
+    if(best<0 && inDanger){
+      G.teammates.forEach((tm,i)=>{
+        if(i===G.ballHolder) return;
+        let minOD=Infinity;
+        G.opponents.forEach(op=>{minOD=Math.min(minOD,Math.hypot(tm.mx-op.mx,tm.my-op.my));});
+        if(minOD<1.5) return;
+        const sc=minOD*1.0+(tm.my-h.my)*0.2;
+        if(sc>bestSc){bestSc=sc;best=i;}
+      });
+    }
+
+    if(best>=0){ h._passTgt=best; h._turnTimer=0; return; }
+
+    // Last resort: freest player regardless of everything
+    if(inDanger){
+      let fallback=-1, fallbackSc=-Infinity;
+      G.teammates.forEach((tm,i)=>{
+        if(i===G.ballHolder) return;
+        let minOD=Infinity;
+        G.opponents.forEach(op=>{minOD=Math.min(minOD,Math.hypot(tm.mx-op.mx,tm.my-op.my));});
+        if(minOD>fallbackSc){fallbackSc=minOD;fallback=i;}
+      });
+      if(fallback>=0){ h._passTgt=fallback; h._turnTimer=0; return; }
+    }
+  }
+
+  // ── Tackle check ────────────────────────────────────────────
+  // Only opponents approaching from the side can tackle (not from directly behind)
+  if(closestOppD<R_OP_TACKLE){
+    // Find the closest opponent
+    let closestOp=null;
+    G.opponents.forEach(op=>{
+      const d=Math.hypot(h.mx-op.mx,h.my-op.my);
+      if(d===closestOppD) closestOp=op;
+    });
+    // Check if opponent is approaching from behind
+    const holderFacing=h._dribAngle??Math.PI/2;
+    let canTackle=true;
+    if(closestOp){
+      const opToHolder=Math.atan2(h.my-closestOp.my,h.mx-closestOp.mx);
+      let relAng=opToHolder-holderFacing;
+      while(relAng>Math.PI) relAng-=Math.PI*2;
+      while(relAng<-Math.PI) relAng+=Math.PI*2;
+      // Behind = opponent is in same direction as holder's movement (|relAng| < 100°)
+      if(Math.abs(relAng)<1.75) canTackle=false; // from behind → can't tackle
+    }
+    if(canTackle){
+      burstM(h.mx,h.my,'#ff4545');
+      if(Math.random()<.45){setBanner('<span class="w">タックル！</span>かわした！');return;}
+      doEnd(false,'タックルされた！でもナイスチャレンジ！');return;
+    }
+  }
+
+  // ── Dribble direction: forward + strong opponent avoidance ─
+  let bestAngle=Math.PI/2, bestDScore=-Infinity;
+  for(let a=0;a<12;a++){
+    const ang=(a/12)*Math.PI*2;
+    const testX=clamp(h.mx+Math.cos(ang)*5, .5, FW-.5);
+    const testY=clamp(h.my+Math.sin(ang)*5, 5.1, FH-.5);
+    // Forward is always rewarded regardless of halfline
+    const forwardBonus=(testY-h.my)*3.5;
+    // Strong penalty for moving toward any opponent within 8m
+    let oppPenalty=0;
+    G.opponents.forEach(op=>{
+      const d=Math.hypot(testX-op.mx,testY-op.my);
+      if(d<8) oppPenalty+=(8-d)*1.8;
+    });
+    const score=forwardBonus-oppPenalty;
+    if(score>bestDScore){bestDScore=score;bestAngle=ang;}
+  }
+  // If all directions have heavy penalty, just go straight forward
+  if(bestDScore<-10) bestAngle=Math.PI/2;
+  // Smooth turn
+  if(h._dribAngle==null) h._dribAngle=Math.PI/2;
+  let angDiff=bestAngle-h._dribAngle;
+  while(angDiff>Math.PI) angDiff-=Math.PI*2;
+  while(angDiff<-Math.PI) angDiff+=Math.PI*2;
+  h._dribAngle+=clamp(angDiff,-0.20,0.20);
+
+  const spd=mps(TM_DRIBBLE_MS);
+  const prevMx=h.mx, prevMy=h.my;
+  h.mx+=Math.cos(h._dribAngle)*spd;
+  h.my+=Math.sin(h._dribAngle)*spd;
+  h.vx=h.mx-prevMx; h.vy=h.my-prevMy; // track velocity for collision
+  h.mx=clamp(h.mx,.5,FW-.5); h.my=clamp(h.my,5.1,FH-.5);
+  G.ball.mx=h.mx; G.ball.my=h.my+2.15;
+
+  if(h.my>HALF){
+    burstM(h.mx,h.my,'#00e5c8');
+    const pts=Math.max(40,Math.round(160-G.timerF*.42));
+    G.score+=pts; doEnd(true,'#'+h.num+'がハーフライン突破！',pts);
+  }
+}
+
+// ── Offside helpers ──────────────────────────────────────────
+// Offside line = MAX of: last field defender y (excl. GK), halfway, ball y
+//
+// The 8 opposition players: OPP_GK (keeper) + 7 field players (G.opponents).
+// Rule: "second-to-last opponent" = GK counts as 1st, so last FIELD defender is 2nd.
+// → last field defender = the opponent with LOWEST y among G.opponents
+//   (lowest y = deepest, closest to own goal = furthest from halfway in this coord system)
+// Wait — in our y axis: y=0 = own goal (bottom), y=68 = opp goal (top).
+// Defenders that are "deep" (close to opp goal) have HIGH y.
+// The "last defender" in offside terms = the outfield player furthest from the opp goal
+// = lowest y among G.opponents.
+// GK (OPP_GK) is always deepest (highest y ≈ 54.5m), so:
+//   all defenders sorted by y DESC: [0]=GK-equivalent, [1]=last field DF
+// We have OPP_GK separate, so among G.opponents sort by y DESC and take [0] = last field DF.
+function calcOffsideLine(){
+  const sorted=[...G.opponents].sort((a,b)=>b.my-a.my);
+  // sorted[0] = field player with highest y = last outfield defender
+  // (GK is OPP_GK, counted as the 1st; sorted[0] is the 2nd = offside line)
+  const defLine = sorted.length>=1 ? sorted[0].my : HALF;
+  return Math.max(defLine, HALF, G.ball.my);
+}
+// Within 20m of own goal, give negative points based on:
+//   - proximity to goal (closer = more negative)
+//   - teammates between ball and goal (fewer = more negative)
+function calcPenaltyPts(){
+  const by=G.ball.my;
+  if(by > 20) return 0;  // more than 20m from own goal (y=0), no penalty
+  // Distance bonus: 0m→ -30, 20m→ 0
+  const distPen = -Math.round((1 - by/20) * 30);
+  // Count teammates between ball and goal (y < ball.y, i.e. closer to goal)
+  let coverage=0;
+  G.teammates.forEach(tm=>{ if(tm.my < by && !tm.hasBall) coverage++; });
+  // 0 teammates between = extra -20, 3+ = no extra
+  const coverPen = -Math.round(Math.max(0, 3-coverage)/3 * 20);
+  return distPen + coverPen;  // negative value
+}
+// Called every frame from update() to keep display current
+function updateOffsideLine(){
+  G._offsideLine=calcOffsideLine();
+}
+
+// Flag teammates at pass/kick release moment
+function flagOffsideAtPass(ballMY){
+  // ハーフライン以下へのキックはオフサイドなし
+  if(ballMY<=HALF){
+    G.teammates.forEach(tm=>{ tm._offside=false; });
+    return;
+  }
+  const oLine=calcOffsideLine();
+  G.teammates.forEach(tm=>{
+    tm._offside=(tm.my>HALF && tm.my>ballMY && tm.my>oLine);
+  });
+}
+CV.addEventListener('click',onField);
+CV.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  const r=CV.getBoundingClientRect(),t=e.touches[0];
+  onField({clientX:t.clientX,clientY:t.clientY,_r:r,_sx:CW/r.width,_sy:CH/r.height});
+},{passive:false});
+
+function clickM(e){
+  const r=e._r||CV.getBoundingClientRect();
+  const sx=e._sx||(CW/r.width),sy=e._sy||(CH/r.height);
+  const cpx=(e.clientX-r.left)*sx-PAD;
+  const cpy=(e.clientY-r.top)*sy-PAD;
+  return{mx:cpx/SC, my:FH-cpy/SC};
+}
+
+function onField(e){
+  if(G.ended) return;
+  const{mx,my}=clickM(e);
+  if(G.phase==='place'){
+    const inZone=G.kickType==='kick'
+      ?(mx>=GA_L&&mx<=GA_R&&my>=0&&my<=OWN_GA)
+      :(mx>=PA_L&&mx<=PA_R&&my>=0&&my<=OWN_PA);
+    if(inZone){
+      G.ball.mx=mx; G.ball.my=my;
+      G.gk.mx=mx; G.gk.my=my-2.15;
+      G.phase='aim'; G.timerRunning=true;
+      setBanner('<span class="hl">②蹴る方向</span>をタップ！<span class="w">フリーな味方</span>を狙え！');
+    } else updatePlaceBanner();
+    return;
+  }
+  if(G.phase==='aim'){
+    G.phase='flying';
+    const dx=mx-G.ball.mx,dy=my-G.ball.my,d=Math.sqrt(dx*dx+dy*dy)||1;
+    const spd=ktSpd();
+    G.ball.vmx=dx/d*spd; G.ball.vmy=dy/d*spd; G.ball.trail=[];
+    flagOffsideAtPass(G.ball.my);
+    setBanner('<span class="hl">'+KT[G.kickType].label+'</span>！');
+  } else if(G.phase==='dribble' && G.ballHolder!==null){
+    // Tap to kick from ball's current position toward tapped point
+    const h=G.teammates[G.ballHolder];
+    const bx=G.ball.mx, by=G.ball.my;
+    const dx=mx-bx, dy=my-by, d=Math.sqrt(dx*dx+dy*dy)||1;
+    const spd=ktSpd();
+    G.ball.vmx=dx/d*spd; G.ball.vmy=dy/d*spd; G.ball.trail=[];
+    h.hasBall=false; h._passTgt=null;
+    G.ballHolder=null;
+    G.phase='flying';
+    flagOffsideAtPass(by);
+    setBanner('<span class="hl">キック！</span>');
+  }
+}
+
+CV.addEventListener('mousemove',e=>{
+  if(G.phase!=='aim') return;
+  const m=clickM(e); G.aimMX=m.mx; G.aimMY=m.my;
+});
+CV.addEventListener('mouseleave',()=>{G.aimMX=null;G.aimMY=null;});
+
+// ── Draw (meters→px conversion ONLY here) ────────────────────
+function draw(){
+  ctx.clearRect(0,0,CW,CH);
+  drawField(); drawHeatmap(); drawTimerBar(); drawTrailGfx();
+  drawTeammates(); drawOpponents(); drawOppGK(); drawGK(); drawBall();
+  // Draw offside line (when it's at or beyond halfline)
+  if(G._offsideLine!=null && G._offsideLine>HALF){
+    ctx.save();
+    ctx.setLineDash([5,4]);
+    ctx.strokeStyle='rgba(255,170,0,0.65)';
+    ctx.lineWidth=1.5;
+    ctx.beginPath();
+    ctx.moveTo(PAD,py(G._offsideLine));
+    ctx.lineTo(PAD+FW*SC,py(G._offsideLine));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(255,170,0,0.75)';
+    ctx.font='bold 9px Zen Kaku Gothic New';
+    ctx.fillText('オフサイドライン',PAD+4,py(G._offsideLine)-3);
+    ctx.restore();
+  }
+  if(G.phase==='place') drawPlaceGuide();
+  if(G.phase==='aim'&&G.aimMX!==null) drawAimLine();
+  drawParticles();
+}
+
+// ── [K] Heatmap overlay ──────────────────────────────────────
+let G_HEAT_VIS = false;
+function toggleHeatmap(){
+  G_HEAT_VIS=!G_HEAT_VIS;
+  const btn=document.getElementById('btn-heat');
+  if(btn) btn.textContent=G_HEAT_VIS?'🗺 熱地図ON':'🗺 熱地図OFF';
+}
+function drawHeatmap(){
+  if(!G_HEAT_VIS||Brain.rounds<1) return;
+  const cellW=(FW/GRID_X)*SC, cellH=(FH/GRID_Y)*SC;
+  ctx.save();
+  for(let ix=0;ix<GRID_X;ix++){
+    for(let iy=0;iy<GRID_Y;iy++){
+      const v=Brain.tmHeat[ix*GRID_Y+iy]??0;
+      if(Math.abs(v)<0.04) continue;
+      const alpha=Math.abs(v)*0.38;
+      ctx.fillStyle=v>0
+        ?`rgba(0,229,200,${alpha})`   // positive: cyan (good zone)
+        :`rgba(255,69,69,${alpha})`;  // negative: red (danger zone)
+      const cx2=PAD+ix*cellW;
+      const cy2=PAD+(GRID_Y-1-iy)*cellH;
+      ctx.fillRect(cx2,cy2,cellW,cellH);
+    }
+  }
+  // Legend
+  ctx.font='bold 8px Zen Kaku Gothic New';
+  ctx.fillStyle='rgba(0,229,200,0.85)'; ctx.fillText('■ 有利',PAD+2,PAD+10);
+  ctx.fillStyle='rgba(255,69,69,0.85)'; ctx.fillText('■ 危険',PAD+2,PAD+20);
+  ctx.restore();
+}
+
+function drawField(){
+  const N=10,fw=FW*SC,fh=FH*SC;
+  for(let i=0;i<N;i++){
+    ctx.fillStyle=i%2===0?'#1c6132':'#1f6e38';
+    ctx.fillRect(PAD,PAD+i*(fh/N),fw,fh/N+1);
+  }
+  ctx.strokeStyle='rgba(255,255,255,.76)';ctx.lineWidth=2;ctx.strokeRect(PAD,PAD,fw,fh);
+  // Halfway
+  ctx.save();ctx.setLineDash([8,6]);
+  ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(PAD,py(HALF));ctx.lineTo(PAD+fw,py(HALF));ctx.stroke();ctx.restore();
+  ctx.fillStyle='rgba(255,255,255,.24)';ctx.font='10px Zen Kaku Gothic New';
+  ctx.fillText('ハーフライン',PAD+4,py(HALF)-4);
+  // Center circle
+  ctx.strokeStyle='rgba(255,255,255,.24)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(px(CX),py(HALF),CC_R*SC,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(px(CX),py(HALF),2.5,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,.38)';ctx.fill();
+  // Tints
+  ctx.fillStyle='rgba(77,166,255,.033)';ctx.fillRect(PAD,py(HALF),fw,py(0)-py(HALF));
+  ctx.fillStyle='rgba(255,69,69,.033)';ctx.fillRect(PAD,PAD,fw,py(HALF)-PAD);
+  // Own PA
+  const paw=(PA_R-PA_L)*SC, gaw=(GA_R-GA_L)*SC;
+  ctx.strokeStyle='rgba(255,255,255,.52)';ctx.lineWidth=1.5;
+  ctx.strokeRect(px(PA_L),py(OWN_PA),paw,py(0)-py(OWN_PA));
+  ctx.beginPath();ctx.arc(px(CX),py(8),2.2,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.38)';ctx.fill();
+  ctx.save();ctx.beginPath();ctx.arc(px(CX),py(8),CC_R*SC,Math.PI*1.14,Math.PI*1.86,false);
+  ctx.strokeStyle='rgba(255,255,255,.30)';ctx.lineWidth=1.4;ctx.stroke();ctx.restore();
+  // Own GA
+  const gaAct=G.phase==='place';
+  if(gaAct&&G.kickType==='kick'){ctx.fillStyle='rgba(0,229,200,.08)';ctx.fillRect(px(GA_L),py(OWN_GA),gaw,py(0)-py(OWN_GA));}
+  if(gaAct&&G.kickType!=='kick'){ctx.fillStyle='rgba(247,212,76,.08)';ctx.fillRect(px(PA_L),py(OWN_PA),paw,py(0)-py(OWN_PA));}
+  ctx.strokeStyle=gaAct&&G.kickType==='kick'?'rgba(0,229,200,.85)':'rgba(255,255,255,.60)';
+  ctx.lineWidth=gaAct&&G.kickType==='kick'?2.5:1.5;
+  ctx.strokeRect(px(GA_L),py(OWN_GA),gaw,py(0)-py(OWN_GA));
+  if(gaAct&&G.kickType==='kick'){
+    ctx.fillStyle='rgba(0,229,200,.78)';ctx.font='bold 10px Zen Kaku Gothic New';
+    ctx.textAlign='center';ctx.fillText('ここに置く',px(CX),py(OWN_GA)-5);ctx.textAlign='left';
+  }
+  if(gaAct&&G.kickType!=='kick'){
+    ctx.strokeStyle='rgba(247,212,76,.85)';ctx.lineWidth=2.5;
+    ctx.strokeRect(px(PA_L),py(OWN_PA),paw,py(0)-py(OWN_PA));
+    ctx.fillStyle='rgba(247,212,76,.78)';ctx.font='bold 10px Zen Kaku Gothic New';
+    ctx.textAlign='center';ctx.fillText('ここに置く',px(CX),py(OWN_PA)-5);ctx.textAlign='left';
+  }
+  drawGoal(px(GL_L),px(GL_R),py(0),'down');
+  // Opp PA
+  ctx.strokeStyle='rgba(255,255,255,.52)';ctx.lineWidth=1.5;
+  ctx.strokeRect(px(PA_L),py(FH),paw,py(OPP_PA)-py(FH));
+  ctx.beginPath();ctx.arc(px(CX),py(FH-8),2.2,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.38)';ctx.fill();
+  ctx.save();ctx.beginPath();ctx.arc(px(CX),py(FH-8),CC_R*SC,Math.PI*.14,Math.PI*.86,false);
+  ctx.strokeStyle='rgba(255,255,255,.30)';ctx.lineWidth=1.4;ctx.stroke();ctx.restore();
+  // Opp GA
+  ctx.strokeStyle='rgba(255,255,255,.60)';ctx.lineWidth=1.5;
+  ctx.strokeRect(px(GA_L),py(FH),gaw,py(OPP_GA)-py(FH));
+  drawGoal(px(GL_L),px(GL_R),py(FH),'up');
+}
+
+function drawGoal(x1,x2,gy,dir){
+  const w=x2-x1,ph=13;ctx.fillStyle='rgba(255,255,255,.88)';
+  if(dir==='down'){ctx.fillRect(x1-4,gy,5,ph);ctx.fillRect(x2-1,gy,5,ph);ctx.fillRect(x1-4,gy,w+9,4);}
+  else{
+    ctx.fillRect(x1-4,gy-ph,5,ph);ctx.fillRect(x2-1,gy-ph,5,ph);ctx.fillRect(x1-4,gy-4,w+9,4);
+    ctx.fillStyle='rgba(255,255,255,.07)';ctx.fillRect(x1,gy-14,w,14);
+    ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=.7;
+    for(let xi=x1;xi<=x2;xi+=9){ctx.beginPath();ctx.moveTo(xi,gy-14);ctx.lineTo(xi,gy);ctx.stroke();}
+    for(let yi=gy-14;yi<=gy;yi+=5){ctx.beginPath();ctx.moveTo(x1,yi);ctx.lineTo(x2,yi);ctx.stroke();}
+  }
+}
+
+function drawTimerBar(){
+  if(!G.timerRunning) return;
+  const p=G.timerF/TIMER_MAX[(G.stage-1)%N_STAGES];
+  ctx.fillStyle='rgba(0,0,0,.26)';ctx.fillRect(PAD,PAD+2,FW*SC,5);
+  ctx.fillStyle=`hsl(${120-p*120},90%,55%)`;ctx.fillRect(PAD,PAD+2,FW*SC*(1-p),5);
+}
+
+function drawPlaceGuide(){
+  const p=.5+.5*Math.sin(Date.now()*.004);
+  const isKick=G.kickType==='kick';
+  const x1=px(isKick?GA_L:PA_L),w=(isKick?GA_R-GA_L:PA_R-PA_L)*SC;
+  const y1=py(isKick?OWN_GA:OWN_PA),h=py(0)-(isKick?py(OWN_GA):py(OWN_PA));
+  ctx.save();
+  ctx.strokeStyle=`rgba(${isKick?'0,229,200':'247,212,76'},${.4+p*.5})`;
+  ctx.lineWidth=2+p*1.5;ctx.strokeRect(x1,y1,w,h);ctx.restore();
+}
+
+function drawTrailGfx(){
+  G.ball.trail.forEach((p,i)=>{
+    const a=(i/G.ball.trail.length)*.52;
+    ctx.beginPath();ctx.arc(px(p.mx),py(p.my),4*(i/G.ball.trail.length),0,Math.PI*2);
+    ctx.fillStyle=`rgba(247,212,76,${a})`;ctx.fill();
+  });
+}
+
+// Draw direction arrow from center at given angle
+function drawDir(bpx,bpy,ang,r,col){
+  const fx=Math.cos(ang),fy=Math.sin(ang); // note: canvas y is flipped vs game y
+  const tx=bpx+fx*(r+4), ty=bpy-fy*(r+4); // subtract fy because canvas y=down
+  const lx=bpx+fx*r, ly=bpy-fy*r;
+  ctx.beginPath();
+  ctx.moveTo(tx,ty);
+  ctx.lineTo(lx+Math.cos(ang+Math.PI/2)*3, ly-Math.sin(ang+Math.PI/2)*3);
+  ctx.lineTo(lx-Math.cos(ang+Math.PI/2)*3, ly+Math.sin(ang+Math.PI/2)*3);
+  ctx.closePath();
+  ctx.fillStyle=col;ctx.fill();
+}
+
+function drawTeammates(){
+  const R=7.7; // 70% of original 11px
+  G.teammates.forEach((tm,i)=>{
+    const bpx=px(tm.mx),bpy=py(tm.my),ph=tm.my>HALF,hld=i===G.ballHolder;
+    pShadow(bpx,bpy);
+    if(ph||hld){ctx.beginPath();ctx.arc(bpx,bpy,R+5,0,Math.PI*2);
+      ctx.fillStyle=hld?'rgba(247,212,76,.17)':'rgba(0,229,200,.10)';ctx.fill();}
+    ctx.beginPath();ctx.arc(bpx,bpy,R,0,Math.PI*2);ctx.fillStyle='#2466b8';ctx.fill();
+    ctx.strokeStyle=hld?'#f7d44c':ph?'#00e5c8':'#5ea8ff';ctx.lineWidth=hld?2.2:1.6;ctx.stroke();
+    pLabel(bpx,bpy,tm.num,'#fff',7);
+    // Direction indicator
+    const ang=hld?(tm._dribAngle??Math.PI/2):(tm.wAngle??Math.PI/2);
+    drawDir(bpx,bpy,ang,R,hld?'#f7d44c':'rgba(255,255,255,.75)');
+    // Labels
+    if((G.phase==='aim'||G.phase==='place'||G.phase==='flying'||G.phase==='loose'||G.phase==='pass')&&ph&&!hld){
+      ctx.fillStyle='rgba(0,229,204,.80)';ctx.font='bold 6px Zen Kaku Gothic New';
+      ctx.textAlign='center';ctx.fillText('フリー',bpx,bpy-R-5);ctx.textAlign='left';
+    }
+    if(hld){ctx.fillStyle='rgba(247,212,76,.88)';ctx.font='bold 6px Zen Kaku Gothic New';
+      ctx.textAlign='center';ctx.fillText('▶DRIB',bpx,bpy-R-5);ctx.textAlign='left';}
+    if(tm._offside&&(G.phase==='flying'||G.phase==='pass')){
+      ctx.fillStyle='rgba(255,170,0,.90)';ctx.font='bold 6px Zen Kaku Gothic New';
+      ctx.textAlign='center';ctx.fillText('⚠️OFF',bpx,bpy+R+8);ctx.textAlign='left';
+    }
+  });
+}
+
+function drawOpponents(){
+  const R=7.7;
+  G.opponents.forEach((op,i)=>{
+    const bpx=px(op.mx),bpy=py(op.my);pShadow(bpx,bpy);
+    ctx.beginPath();ctx.arc(bpx,bpy,R,0,Math.PI*2);ctx.fillStyle='#a81818';ctx.fill();
+    ctx.strokeStyle='#ff7070';ctx.lineWidth=1.6;ctx.stroke();pLabel(bpx,bpy,'D','#fff',7);
+    // Direction: toward current target (use pAngle as fallback)
+    const ang=op._moveAng??op.pAngle??0;
+    drawDir(bpx,bpy,ang,R,'rgba(255,160,160,.80)');
+  });
+}
+
+function drawOppGK(){
+  const bpx=px(OPP_GK.mx), bpy=py(OPP_GK.my);
+  pShadow(bpx,bpy);
+  ctx.beginPath();ctx.arc(bpx,bpy,11.2,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,69,69,.08)';ctx.fill();
+  ctx.beginPath();ctx.arc(bpx,bpy,9.1,0,Math.PI*2);
+  ctx.fillStyle='#881010';ctx.fill();
+  ctx.strokeStyle='#ff4545';ctx.lineWidth=1.8;ctx.stroke();
+  pLabel(bpx,bpy,'GK','#fff',7);
+}
+function drawGK(){
+  const bpx=px(G.gk.mx),bpy=py(G.gk.my);pShadow(bpx,bpy);
+  ctx.beginPath();ctx.arc(bpx,bpy,11.2,0,Math.PI*2);ctx.fillStyle='rgba(0,229,200,.08)';ctx.fill();
+  ctx.beginPath();ctx.arc(bpx,bpy,9.1,0,Math.PI*2);ctx.fillStyle='#009976';ctx.fill();
+  ctx.strokeStyle='#00e5c8';ctx.lineWidth=1.8;ctx.stroke();pLabel(bpx,bpy,'GK','#fff',7);
+  // GK faces upfield
+  drawDir(bpx,bpy,Math.PI/2,9.1,'rgba(0,229,200,.85)');
+}
+
+function drawBall(){
+  const bpx=px(G.ball.mx),bpy=py(G.ball.my);
+  ctx.beginPath();ctx.ellipse(bpx,bpy+6,6,2.5,0,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,.19)';ctx.fill();
+  ctx.beginPath();ctx.arc(bpx,bpy,7,0,Math.PI*2);ctx.fillStyle='#f7d44c';ctx.fill();
+  ctx.strokeStyle='#fff';ctx.lineWidth=1.4;ctx.stroke();
+  ctx.beginPath();ctx.arc(bpx,bpy,3,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,.20)';ctx.fill();
+}
+
+function drawAimLine(){
+  const bpx=px(G.ball.mx),bpy=py(G.ball.my),apx=px(G.aimMX),apy=py(G.aimMY);
+  const col=KT[G.kickType].col;
+  ctx.save();ctx.setLineDash([6,5]);ctx.strokeStyle=col+'bb';ctx.lineWidth=1.8;
+  ctx.beginPath();ctx.moveTo(bpx,bpy);ctx.lineTo(apx,apy);ctx.stroke();ctx.restore();
+  const ang=Math.atan2(apy-bpy,apx-bpx);ctx.fillStyle=col;
+  ctx.beginPath();
+  ctx.moveTo(apx+Math.cos(ang)*9,apy+Math.sin(ang)*9);
+  ctx.lineTo(apx+Math.cos(ang+2.5)*6,apy+Math.sin(ang+2.5)*6);
+  ctx.lineTo(apx+Math.cos(ang-2.5)*6,apy+Math.sin(ang-2.5)*6);
+  ctx.closePath();ctx.fill();
+}
+
+function drawParticles(){
+  G.particles.forEach(p=>{
+    // Use per-particle alpha if set, otherwise default life-based fade
+    const maxA = p.alpha ?? 1.0;
+    ctx.globalAlpha=Math.max(0,p.life*maxA);
+    ctx.beginPath();ctx.arc(p.dpx,p.dpy,p.r,0,Math.PI*2);ctx.fillStyle=p.col;ctx.fill();
+  });
+  ctx.globalAlpha=1;
+}
+
+// helpers
+function pShadow(x,y){ctx.beginPath();ctx.ellipse(x,y+10,8,3.5,0,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,.16)';ctx.fill();}
+function pLabel(x,y,t,c,fs=8){ctx.fillStyle=c;ctx.font=`bold ${fs}px Orbitron`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,x,y);ctx.textAlign='left';ctx.textBaseline='alphabetic';}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function burstM(mx,my,col){
+  for(let i=0;i<4;i++){
+    const a=Math.random()*Math.PI*2,s=(.15+Math.random()*.54);
+    G.particles.push({mx,my,vmx:Math.cos(a)*s,vmy:Math.sin(a)*s,dpx:px(mx),dpy:py(my),r:Math.random()*4+2,life:1,col});
+  }
+}
+
+function spawnTrail(){
+  if(Math.random()<.10){
+    const jx=(Math.random()-.5)*.4,jy=(Math.random()-.5)*.4;
+    const mx=G.ball.mx+jx,my=G.ball.my+jy;
+    const col=KT[G.kickType].col;
+    G.particles.push({mx,my,vmx:(Math.random()-.5)*.06,vmy:(Math.random()-.5)*.06,
+      dpx:px(mx),dpy:py(my),r:1.0,life:.10,col,alpha:.20});
+  }
+}
+
+function advParticles(){
+  G.particles.forEach(p=>{
+    p.mx+=p.vmx; p.my+=p.vmy; p.vmy-=.008;
+    p.dpx=px(p.mx); p.dpy=py(p.my); p.life-=.022;
+  });
+  G.particles=G.particles.filter(p=>p.life>0);
+  // Hard cap: max 4 particles at any time (was ~20)
+  if(G.particles.length>4) G.particles=G.particles.slice(-4);
+}
+
+// ================================================================
+//  LEARNING SYSTEM  v2 — 3つの学習行動
+//
+//  【1】ポジショニング (Positioning Heatmap)
+//      フィールドを 10×10 グリッドに分割。
+//      ・味方: ボールを受けた/フリーだったグリッドに正報酬
+//      ・敵:   ボールをカットしたグリッドに正報酬
+//      →ラウンドをまたいで「有利ゾーン」へのドリフトが強まる
+//
+//  【2】プレス・マーク連携 (Mark Assignment Matrix)
+//      7×7 の相性行列 opMarkPref[op_idx][tm_idx]
+//      →カットできたとき担当した味方への親和性を上げる
+//      →次ラウンドから各敵は最も親和度の高い味方を優先マーク
+//
+//  【3】ボール予測移動 (Ball Prediction)
+//      ボールの速度ベクトルから到達点を予測し、
+//      学習した精度(predAccuracy)分だけ先読みして動く
+//      →成功ラウンドで到達点計算の「先読みフレーム数」が増える
+// ================================================================
+
+const GRID_X=10, GRID_Y=10;     // heatmap resolution
+const HEAT_SIZE=GRID_X*GRID_Y;
+const hx=mx=>Math.min(GRID_X-1,Math.floor(mx/(FW/GRID_X)));
+const hy=my=>Math.min(GRID_Y-1,Math.floor(my/(FH/GRID_Y)));
+const hIdx=(mx,my)=>hx(mx)*GRID_Y+hy(my);
+
+const ALPHA_H  = 0.14;   // heatmap learning rate
+const ALPHA_M  = 0.16;   // mark matrix learning rate
+const ALPHA_P  = 0.08;   // prediction accuracy learning rate
+const EPS0     = 0.42;
+const EPS_MIN  = 0.04;
+const EPS_DEC  = 0.013;
+
+const Brain={
+  // 【1】Positioning heatmaps (value ∈ [-1..1])
+  tmHeat: new Float32Array(HEAT_SIZE).fill(0),   // teammate free space value
+  opHeat: new Float32Array(HEAT_SIZE).fill(0),   // opponent intercept value
+
+  // 【2】Mark assignment matrix [7 ops × 7 tms]
+  opMarkPref: Array.from({length:7},()=>new Float32Array(7).fill(0)),
+
+  // 【3】Ball prediction accuracy (0=no prediction, 1=full prediction)
+  tmPredAcc:  0.0,   // teammate ball arrival prediction accuracy
+  opPredAcc:  0.0,   // opponent ball intercept prediction accuracy
+
+  // Exploration
+  eps: EPS0, rounds: 0,
+
+  // ── Derived runtime params (recomputed after each round) ───
+  //  味方: heatmap → fleeフォースの方向バイアス
+  tmHeatBias:  new Float32Array(HEAT_SIZE).fill(0),  // per-cell drift bonus (m/s)
+  //  敵:   mark assignment index per opponent
+  opMarkAssign: new Array(7).fill(-1),               // -1 = no preference
+  //  予測: lookahead frames
+  tmPredFrames: 0,  // how many frames ahead teammates predict ball
+  opPredFrames: 0,
+
+  // ── ε-greedy helper ──────────────────────────────────────
+  epsilonChoice(doExplore, exploitFn){
+    return Math.random()<this.eps ? doExplore() : exploitFn();
+  },
+
+  // ── Assign mark preferences before each round ────────────
+  assignMarkRoles(){
+    // Hungarian-lite: greedy assignment of opponents to teammates
+    // based on opMarkPref table
+    const assigned=new Set();
+    this.opMarkAssign=new Array(7).fill(-1);
+    G.opponents.forEach((op,oi)=>{
+      if(this.rounds<3){return;} // no preference early on
+      let best=-1,bv=-Infinity;
+      G.teammates.forEach((tm,ti)=>{
+        if(assigned.has(ti)) return;
+        const v=this.opMarkPref[oi]?.[ti]??0;
+        if(v>bv){bv=v;best=ti;}
+      });
+      if(best>=0&&bv>0.05){this.opMarkAssign[oi]=best;assigned.add(best);}
+    });
+  },
+
+  // ── Per-frame: record positions for heatmap update ───────
+  recordPositions(){
+    // Save last positions for end-of-round update
+    G.teammates.forEach(tm=>{tm._lastCell=hIdx(tm.mx,tm.my);});
+    G.opponents.forEach(op=>{op._lastCell=hIdx(op.mx,op.my);});
+  },
+
+  // ── Predict ball landing position (meters) ───────────────
+  predictBall(frames){
+    if(frames<=0||G.phase==='place'||G.phase==='aim') return null;
+    const b=G.ball;
+    let mx=b.mx,my=b.my,vmx=b.vmx,vmy=b.vmy;
+    for(let f=0;f<frames;f++){vmx*=BALL_DECAY;vmy*=BALL_DECAY;mx+=vmx;my+=vmy;}
+    // Clamp to field
+    return{mx:clamp(mx,.5,FW-.5),my:clamp(my,5.1,FH-.5)};
+  },
+
+  // ── Called every N frames during play ────────────────────
+  // Record ball interceptions & free positions for live update
+  onBallIntercepted(opIdx,tmIdx){
+    // 【2】 Mark matrix: this op successfully intercepts near this tm
+    if(opIdx>=0&&opIdx<7&&tmIdx>=0&&tmIdx<7){
+      const pref=this.opMarkPref[opIdx];
+      if(pref) pref[tmIdx]=Math.min(1.0, (pref[tmIdx]??0)+ALPHA_M);
+    }
+  },
+  onBallCaught(tmIdx){
+    // 【1】+【J】 Teammate heatmap: receiving zone is good
+    // Stronger center reward + neighbour-cell diffusion so
+    // the learned zone forms a natural region, not isolated dots.
+    const tm=G.teammates[tmIdx];
+    if(!tm) return;
+    const c=hIdx(tm.mx,tm.my);
+    // Center cell: stronger update (×3 vs original ×2)
+    this.tmHeat[c]=Math.min(1.0,(this.tmHeat[c]??0)+ALPHA_H*3.0);
+    // [J] Diffuse to all 8 neighbours with half weight
+    const cx=hx(tm.mx), cy=hy(tm.my);
+    for(let dx2=-1;dx2<=1;dx2++){
+      for(let dy2=-1;dy2<=1;dy2++){
+        if(dx2===0&&dy2===0) continue;
+        const nx=cx+dx2, ny=cy+dy2;
+        if(nx<0||nx>=GRID_X||ny<0||ny>=GRID_Y) continue;
+        const nc=nx*GRID_Y+ny;
+        this.tmHeat[nc]=Math.min(1.0,(this.tmHeat[nc]??0)+ALPHA_H*0.7);
+      }
+    }
+  },
+
+  // ── Called at end of round ───────────────────────────────
+  onRoundEnd(success,pts){
+    this.rounds++;
+    const tmReward=success?clamp(pts/80,0.2,1.8):-0.9;
+    const opReward=-tmReward;
+
+    // 【1】 Update positional heatmaps
+    G.teammates.forEach(tm=>{
+      const c=tm._lastCell??hIdx(tm.mx,tm.my);
+      this.tmHeat[c]+= ALPHA_H*(tmReward - this.tmHeat[c]);
+      this.tmHeat[c]=clamp(this.tmHeat[c],-1,1);
+    });
+    G.opponents.forEach(op=>{
+      const c=op._lastCell??hIdx(op.mx,op.my);
+      this.opHeat[c]+= ALPHA_H*(opReward - this.opHeat[c]);
+      this.opHeat[c]=clamp(this.opHeat[c],-1,1);
+    });
+
+    // 【2】 Decay mark preferences slightly each round
+    this.opMarkPref.forEach(row=>{
+      for(let i=0;i<row.length;i++) row[i]*=0.97;
+    });
+
+    // 【3】 Update prediction accuracy
+    const predDelta=success?ALPHA_P:-ALPHA_P*0.5;
+    this.tmPredAcc=clamp(this.tmPredAcc+predDelta,0,1);
+    this.opPredAcc=clamp(this.opPredAcc+predDelta*(success?-1:1),0,1);
+
+    // Decay exploration
+    this.eps=Math.max(EPS_MIN,this.eps-EPS_DEC);
+
+    // Recompute derived params
+    this._recompute();
+    updateLearnBadge();
+    this.save();
+  },
+
+  // Recompute runtime params from learned data
+  _recompute(){
+    // 【1】 Heatmap → drift bias per cell (scaled m/s)
+    for(let i=0;i<HEAT_SIZE;i++){
+      this.tmHeatBias[i]=this.tmHeat[i]*2.2;  // max ±2.2 m/s bias
+    }
+    // 【3】 Prediction lookahead frames (max 90 frames = 1.5s)
+    this.tmPredFrames=Math.round(this.tmPredAcc*90);
+    this.opPredFrames=Math.round(this.opPredAcc*90);
+
+    // 【2】 Mark assignment
+    this.assignMarkRoles();
+  },
+
+  async save(){
+    try{
+      const data=JSON.stringify({
+        tmHeat:Array.from(this.tmHeat),
+        opHeat:Array.from(this.opHeat),
+        opMarkPref:this.opMarkPref.map(r=>Array.from(r)),
+        tmPredAcc:this.tmPredAcc, opPredAcc:this.opPredAcc,
+        eps:this.eps, rounds:this.rounds,
+        tmPredFrames:this.tmPredFrames, opPredFrames:this.opPredFrames,
+      });
+      // Use localStorage for standalone distribution
+      // Falls back gracefully if not available
+      if(typeof localStorage!=='undefined') localStorage.setItem('gk_brain_v2',data);
+    }catch(e){}
+  },
+  async load(){
+    try{
+      let data=null;
+      if(typeof localStorage!=='undefined') data=localStorage.getItem('gk_brain_v2');
+      if(!data) return;
+      const d=JSON.parse(data);
+      if(d.tmHeat) this.tmHeat=new Float32Array(d.tmHeat);
+      if(d.opHeat) this.opHeat=new Float32Array(d.opHeat);
+      if(d.opMarkPref) this.opMarkPref=d.opMarkPref.map(r=>new Float32Array(r));
+      this.tmPredAcc=d.tmPredAcc??0;
+      this.opPredAcc=d.opPredAcc??0;
+      this.eps=d.eps??EPS0;
+      this.rounds=d.rounds??0;
+      this._recompute();
+    }catch(e){}
+    updateLearnBadge();
+  },
+  resetData(){
+    this.tmHeat.fill(0); this.opHeat.fill(0);
+    this.opMarkPref=Array.from({length:7},()=>new Float32Array(7).fill(0));
+    this.tmPredAcc=0; this.opPredAcc=0;
+    this.eps=EPS0; this.rounds=0;
+    this.tmHeatBias.fill(0);
+    this.opMarkAssign=new Array(7).fill(-1);
+    this.tmPredFrames=0; this.opPredFrames=0;
+    updateLearnBadge();
+    try{if(typeof localStorage!=='undefined') localStorage.removeItem('gk_brain_v2');}catch(e){}
+  },
+};
+
+function updateLearnBadge(){
+  const r=Brain.rounds;
+  // Level based on rounds (experience), not epsilon
+  const lvl=r<5?'初心者':r<20?'学習中':r<50?'上達中':r<100?'熟練':r<200?'エキスパート':'マスター';
+  // Exploration rate: starts high (lots of random exploration), decreases as AI commits to learned strategy
+  // 100% = fully random/exploring, 0% = always using learned behaviour
+  const explPct=Math.round((Brain.eps/EPS0)*100);
+  const tmP=Math.round(Brain.tmPredAcc*100), opP=Math.round(Brain.opPredAcc*100);
+  // Experience: grows indefinitely with rounds
+  const expBar='█'.repeat(Math.min(10,Math.floor(r/5)))+' '.repeat(Math.max(0,10-Math.floor(r/5)));
+  const el=document.getElementById('learn-badge');
+  if(el) el.textContent=
+    `🧠 ${lvl}(${r}戦) 探索率${explPct}%↓ 予測:味${tmP}%敵${opP}%`;
+}
+
+// ── Round end / UI ───────────────────────────────────────────
+function doEnd(success,msg,pts=0,halfline){
+  if(G.ended) return;
+  G.ended=true;cancelAnimationFrame(G.rafId);G.phase='result';G.timerRunning=false;
+  Brain.onRoundEnd(halfline===undefined?success:halfline, pts);
+  const full=halfline===undefined?success:halfline;updateScore();
+
+  // Position overlay above ball on screen, shifted 10m upward
+  const ov=document.getElementById('overlay');
+  const fw=document.getElementById('field-wrap');
+  const wrapH=fw.offsetHeight||400;
+  // Ball pixel position in displayed canvas (0=top, wrapH=bottom)
+  const ballPxInCanvas=(PAD+(FH-G.ball.my)*SC)/CH * wrapH;
+  // Extra 10m upward shift in canvas pixels
+  const tenMeterShift=(10*SC)/CH * wrapH;
+  const boxH=ov.offsetHeight||130;
+  const topPx=clamp(ballPxInCanvas - boxH - 20 - tenMeterShift, 6, wrapH - boxH - 6);
+  ov.style.top=Math.round(topPx)+'px';
+
+  const box=document.getElementById('ov-box');
+  box.className='ov-box '+(full?'success':success?'partial':'failure');
+  document.getElementById('ov-icon').textContent=full?'🎉':success?'👍':'😅';
+  document.getElementById('ov-title').textContent=full?'突破成功！':success?'前進した！':'失敗…';
+  document.getElementById('ov-pts').textContent=pts>0?'+'+pts+' pts':'';
+  document.getElementById('ov-msg').textContent=msg;
+  document.getElementById('overlay').classList.add('show');
+  if(full){G.successCount++;if(G.successCount%3===0&&G.stage<N_STAGES)G.stage++;}
+}
+function nextRound(){document.getElementById('overlay').classList.remove('show');initRound();}
+function resetRound(){document.getElementById('overlay').classList.remove('show');initRound();}
+function setBanner(h){document.getElementById('phase-banner').innerHTML=h;}
+function updateScore(){document.getElementById('score-disp').textContent='🏆 '+G.score;}
+function setKT(t){
+  G.kickType=t;G.power=KT[t].defaultPower;updatePw();
+  ['kick','throw','long'].forEach(k=>document.getElementById('btn-kt-'+k).classList.toggle('on',k===t));
+  if(G.phase==='place') updatePlaceBanner();
+}
+document.getElementById('pw-bg').addEventListener('click',e=>{
+  const r=document.getElementById('pw-bg').getBoundingClientRect();
+  G.power=clamp((e.clientX-r.left)/r.width,.2,1);updatePw();
+});
+document.getElementById('field-wrap').addEventListener('wheel',e=>{
+  e.preventDefault();G.power=clamp(G.power-e.deltaY*.001,.2,1);updatePw();
+},{passive:false});
+function updatePw(){
+  document.getElementById('pw-fill').style.width=(G.power*100)+'%';
+  const ms=(MAX_KICK_MS*G.power).toFixed(1);
+  document.getElementById('pw-label').textContent=ms+'m/s';
+}
+function showHelp(){
+  document.getElementById('ov-icon').textContent='📋';
+  document.getElementById('ov-title').textContent='ルール・ポイント説明';
+  document.getElementById('ov-pts').textContent='';
+  document.getElementById('ov-msg').innerHTML=
+    '<b>【ゲームの流れ】</b><br>'+
+    '①ゴールエリア/PAをタップしてボール設置<br>'+
+    '②蹴る方向をタップして発射！<br><br>'+
+    '<b>【ポイント計算】</b><br>'+
+    '✅ ハーフライン突破：<b>40〜160pt</b><br>'+
+    '　 残り時間が多いほど高得点<br>'+
+    '　 計算式：max(40, 160 − 経過フレーム×0.42)<br>'+
+    '👍 ハーフ越えで誰も受けられず：<b>+20pt</b><br>'+
+    '👍 PAより前でボール停止：<b>+8pt</b><br>'+
+    '❌ 失敗・タイムアップ・オフサイド：<b>0pt</b><br><br>'+
+    '<b>【オフサイドルール】</b><br>'+
+    'キック/パス送出の瞬間、相手陣かつ<br>'+
+    '最終ラインより前の味方にフラグが立つ。<br>'+
+    'フラグの選手がボールを受けると失敗。<br>'+
+    '（ハーフライン手前へのキックは無効）<br><br>'+
+    '赤Dへの直撃のみ即失敗。';
+  document.getElementById('overlay').classList.add('show');
+}
+function resetLearning(){
+  if(confirm('学習データをリセットしますか？\nプレイヤーが初心者に戻ります。')){
+    Brain.resetData(); setBanner('🗑 学習データをリセットしました。');
+  }
+}
+function resize(){
+  const w=Math.min(window.innerWidth-12,520);
+  CV.style.width=w+'px';CV.style.height=Math.round(CH*(w/CW))+'px';
+}
+window.addEventListener('resize',resize);resize();
+// Load persistent learning data then start
+Brain.load().then(()=>initRound());
+</script>
+</body>
+</html>
