@@ -215,6 +215,16 @@ const GK_MX=CX, GK_MY=OWN_GA+1.5;
 // Opponent GK — stationary at opp PA arc area (y ≈ OPP_PA = 56m)
 const OPP_GK = { mx: CX, my: OPP_PA - 1.5 }; // just inside opp PA top edge
 
+// ==================== 敵AIリアル化用 新定数 ====================
+const OP_MARK_CLOSE_DIST   = 9.0;   // マーク対象が近いとみなす距離(m)
+const OP_COVER_OFFSET      = 6.5;   // カバー位置の後方オフセット(m)
+const OP_COMPACT_PULL      = 0.25;  // チームコンパクトネス（0〜1）
+const OP_MARK_SWITCH_DELAY = 45;    // マーク切り替えの最小フレーム間隔（安定化用）
+// ==================== パトロール強化用 新定数 ====================
+const PATROL_CENTRAL_PULL   = 0.35;   // 中央への引き寄せ強度（0.0〜0.6程度）
+const PATROL_ENEMY_PULL     = 0.45;   // 敵（味方選手）が多い方向への引き寄せ
+const PATROL_MIN_MOVE_DIST  = 12;     // これ以上離れていたら積極的に動く距離(m)
+
 // ── Placement helpers ────────────────────────────────────────
 function rnd(a,b){return a+Math.random()*(b-a);}
 function randInt(a,b){return Math.floor(rnd(a,b+0.999));}
@@ -769,7 +779,7 @@ function clampTM(tm, idx){
 }
 
 // ── Opponents (meters) ───────────────────────────────────────
-function updateOpponents(){
+function updateOpponents_org(){
   const now=Date.now()*.001;
   G.opponents.forEach((op,i)=>{
     // Separation
@@ -908,6 +918,183 @@ function updateOpponents(){
       }
     });
   });
+}
+
+function updateOpponents(){
+    const now = Date.now() * 0.001;
+    const si = (G.stage - 1) % N_STAGES;
+
+    const pressActive = G.pressDelayPassed || 
+                        G.phase === 'flying' || G.phase === 'loose' || 
+                        G.phase === 'pass' || G.phase === 'dribble';
+
+    // 事前計算：味方選手の密集位置（中央突破対策）
+    let centerPullX = FW / 2;
+    let centerPullY = HALF;
+    let totalWeight = 0;
+
+    G.teammates.forEach(tm => {
+        if (tm._offside) return;
+        const weight = 1 / (Math.hypot(tm.mx - FW/2, tm.my - HALF) + 8); // 中央に近いほど重み大
+        centerPullX += tm.mx * weight;
+        centerPullY += tm.my * weight;
+        totalWeight += weight;
+    });
+    if (totalWeight > 0) {
+        centerPullX /= totalWeight;
+        centerPullY = Math.max(OWN_PA + 8, Math.min(HALF + 12, centerPullY / totalWeight));
+    }
+
+    G.opponents.forEach((op, i) => {
+        // Separation（選手同士の間隔維持） - 既存のまま
+        let sepx = 0, sepy = 0;
+        G.opponents.forEach((op2, j) => {
+            if (j === i) return;
+            const dx = op.mx - op2.mx;
+            const dy = op.my - op2.my;
+            const d = Math.hypot(dx, dy) || 1;
+            if (d < R_OP_SEP) {
+                const s = ((R_OP_SEP - d) / R_OP_SEP) * mps(4.6);
+                sepx += (dx / d) * s;
+                sepy += (dy / d) * s;
+            }
+        });
+
+        let tx, ty, desSpdMult = 1.0;
+
+        if (!pressActive) {
+            // ==================== パトロール強化（新ロジック） ====================
+            op.pTimer = (op.pTimer || 0) + 1;
+            if (op.pTimer > 70 + i * 5) {
+                op.pTimer = 0;
+                op.pAngle = (op.pAngle || 0) + (Math.random() - 0.5) * 1.8;
+            }
+
+            // 基本パトロール位置（元の小さい動き）
+            let baseX = op.omx + Math.sin(now * 0.32 + i) * 6.5;
+            let baseY = op.omy + Math.cos(now * 0.25 + i) * 3.2;
+
+            // 1. 初期配置付近に他の敵がいなければ、敵（味方選手）方向へ動く
+            let nearestEnemyDist = Infinity;
+            let nearestEnemyX = baseX;
+            let nearestEnemyY = baseY;
+
+            G.teammates.forEach(tm => {
+                if (tm._offside) return;
+                const d = Math.hypot(op.mx - tm.mx, op.my - tm.my);
+                if (d < nearestEnemyDist) {
+                    nearestEnemyDist = d;
+                    nearestEnemyX = tm.mx;
+                    nearestEnemyY = tm.my;
+                }
+            });
+
+            // 2. 中央への引き寄せ（中央突破防止）
+            const distToBase = Math.hypot(op.mx - op.omx, op.my - op.omy);
+
+            if (nearestEnemyDist > PATROL_MIN_MOVE_DIST || distToBase > 18) {
+                // 敵が遠い or 自分の初期位置から離れすぎ → 敵方向 + 中央方向へ
+                tx = baseX * 0.35 + nearestEnemyX * PATROL_ENEMY_PULL + centerPullX * PATROL_CENTRAL_PULL;
+                ty = baseY * 0.45 + nearestEnemyY * PATROL_ENEMY_PULL * 0.8 + centerPullY * PATROL_CENTRAL_PULL * 1.1;
+            } else {
+                // 近くに敵がいる場合は軽いパトロール + 軽い中央意識
+                tx = baseX * 0.75 + centerPullX * 0.25;
+                ty = baseY * 0.8 + centerPullY * 0.2;
+            }
+
+            tx += sepx * 0.35;
+            ty += sepy * 0.35;
+
+            desSpdMult = 0.85;  // パトロール中は少しゆったり
+        } else {
+            // ==================== プレス中（既存ロジックを維持） ====================
+            // ここは元のコードの else ブロックをほぼそのまま使用（bestTM, zone pressなど）
+            let bestTM = null, bestScore = -Infinity;
+            const assignedTMIdx = Brain.opMarkAssign[i] ?? -1;
+            G.teammates.forEach((tm, ti) => {
+                if (tm._offside) return;
+                const dMe = Math.hypot(tm.mx - op.mx, tm.my - op.my);
+                let minOC = Infinity;
+                G.opponents.forEach(op2 => { if (op2 !== op) minOC = Math.min(minOC, Math.hypot(tm.mx - op2.mx, tm.my - op2.my)); });
+                const hBonus = tm.my > HALF - R_HALF_PRESS ? (tm.my - (HALF - R_HALF_PRESS)) * 1.23 : 0;
+                const markBonus = (Brain.rounds > 4 && ti === assignedTMIdx) ? 5.5 : 0;
+                const sc = minOC * 0.5 - dMe * 0.35 + hBonus + markBonus;
+                if (sc > bestScore) { bestScore = sc; bestTM = tm; }
+            });
+
+            let tx2, ty2;
+            if (G.phase === 'flying' || G.phase === 'loose' || G.phase === 'pass') {
+                const pred = Brain.predictBall(Brain.opPredFrames);
+                const pbx = pred ? pred.mx : G.ball.mx;
+                const pby = pred ? pred.my : G.ball.my;
+                const bd = Math.hypot(op.mx - pbx, op.my - pby);
+                const ballNearHalf = G.ball.my >= HALF - 8 && G.ball.my <= HALF + 8;
+                if (bd < R_OP_BALL || ballNearHalf) {
+                    const myRank = (() => {
+                        let rank = 0;
+                        G.opponents.forEach(op2 => {
+                            if (op2 !== op && Math.hypot(op2.mx - pbx, op2.my - pby) < bd) rank++;
+                        });
+                        return rank;
+                    })();
+                    if (myRank < 2) {
+                        tx2 = pbx; ty2 = pby;
+                    } else {
+                        const laneX = PA_L + ((i + 1) / (G.opponents.length + 1)) * (PA_R - PA_L);
+                        const zoneY = clamp(pby - 5, OWN_PA + 1, HALF - 1);
+                        tx2 = laneX; ty2 = zoneY;
+                    }
+                } else {
+                    tx2 = bestTM ? bestTM.mx : op.omx;
+                    ty2 = bestTM ? bestTM.my : op.omy;
+                }
+            } else if (G.phase === 'dribble' && G.ballHolder !== null) {
+                const h = G.teammates[G.ballHolder];
+                const holderNearHalf = h.my >= HALF - 6;
+                if (i < 3 || holderNearHalf) { tx2 = h.mx; ty2 = h.my; }
+                else { tx2 = bestTM ? bestTM.mx : h.mx; ty2 = bestTM ? bestTM.my : h.my; }
+            } else {
+                tx2 = bestTM ? bestTM.mx : op.omx;
+                ty2 = bestTM ? bestTM.my : op.omy;
+            }
+            tx = tx2;
+            ty = ty2;
+            desSpdMult = G.phase === 'dribble' ? OP_DRIB_MULT : OP_PRESS_MULT;
+        }
+
+        // ==================== 共通の移動実行 ====================
+        if (tx !== undefined && ty !== undefined) {
+            const dx = tx - op.mx;
+            const dy = ty - op.my;
+            const d = Math.hypot(dx, dy) || 1;
+            const baseSpd = mps(OP_BASE_SPD_MS + si * OP_BASE_INC_MS);
+            const desSpd = baseSpd * desSpdMult;
+
+            const desVx = (dx / d) * desSpd + sepx * 0.4;
+            const desVy = (dy / d) * desSpd + sepy * 0.4;
+
+            // 加速度（パトロール時は緩やか）
+            const acc = mps(!pressActive ? OP_ACC_MS2 * 0.6 : OP_ACC_MS2);
+            const dvx = desVx - (op.vx ?? 0);
+            const dvy = desVy - (op.vy ?? 0);
+            const dv = Math.hypot(dvx, dvy) || 1;
+            const step = Math.min(acc, dv);
+
+            op.vx = (op.vx ?? 0) + (dvx / dv) * step;
+            op.vy = (op.vy ?? 0) + (dvy / dv) * step;
+
+            op.vx *= FRICTION;
+            op.vy *= FRICTION;
+            op.mx += op.vx;
+            op.my += op.vy;
+            op._moveAng = Math.atan2(op.vy, op.vx);
+        }
+
+        // 境界制限（既存）
+        op.mx = clamp(op.mx, 0.5, FW - 0.5);
+        op.my = clamp(op.my, 0.5, FH - 0.5);
+        if (op.my < OWN_PA + 0.9) op.my = OWN_PA + 0.9;
+    });
 }
 
 // ── Dribble AI (meters) ──────────────────────────────────────
