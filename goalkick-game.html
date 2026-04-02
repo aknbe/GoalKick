@@ -809,19 +809,21 @@ function updateTeammates(){
     if(tm.my<=5.1||tm.my>=FH-.5) tm.vy*=-.3;
   });
 }
+
 function clampTM(tm, idx){
   tm.mx=clamp(tm.mx,.5,FW-.5);
   tm.my=clamp(tm.my,5.1,FH-.5);
-  if(idx !== 0 && tm.my < OWN_PA+0.5) tm.my = OWN_PA+0.5;
+  if(idx !== 0 && tm.my < OWN_PA-3) tm.my = OWN_PA-3;
   // Offside line: soft velocity push (not hard clamp) to prevent teleportation
   // Only active when ball is in opponent half and offside line is meaningful
   if(G._offsideLine!=null && G._offsideLine>HALF+1){
-    const maxY = G._offsideLine - 1.5;
+    const maxY = G._offsideLine ;
     if(tm.my > maxY){
       // Push back with proportional force — never teleport
       const over = tm.my - maxY;
-      tm.vy -= Math.min(over * 0.4, mps(TM_MAX_MS));
-      tm.my = Math.min(tm.my, maxY + 0.5);  // soft cap only 0.5m over
+      tm.vy -= Math.min(over * 0.1, mps(TM_MAX_MS));
+      //tm.my = Math.min(tm.my, maxY + 3);  // soft cap only 0.5m over
+      tm.my+=tm.vy;  // soft cap only 0.5m over
     }
   }
   // Rear exclusion zone: push out any other teammate within 0.7m in rear ±60°
