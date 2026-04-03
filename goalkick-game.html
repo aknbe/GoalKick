@@ -1265,10 +1265,10 @@ function updateOffsideLine(){
 // Flag teammates at pass/kick release moment
 function flagOffsideAtPass(ballMY){
   // ボールがハーフライン以下（自陣側）へのキックはオフサイドなし
-  if(ballMY <= HALF){
-    G.teammates.forEach(tm=>{ tm._offside=false; });
-    return;
-  }
+  //if(ballMY <= HALF){
+  //  G.teammates.forEach(tm=>{ tm._offside=false; });
+  //  return;
+  //}
   const oLine=calcOffsideLine();
   G.teammates.forEach(tm=>{
     tm._offside=(tm.my>HALF && tm.my>ballMY && tm.my>oLine);
